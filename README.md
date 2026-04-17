@@ -25,17 +25,16 @@
 src/
 ├── lib/
 │   ├── db/
-│   │   ├── schema.ts      drizzle table definitions (users, sessions, workouts, sets,
-│   │   │                  prescriptions, recovery_metrics, gear_profiles, events_calendar)
+│   │   ├── schema.ts      drizzle table definitions
 │   │   ├── client.ts      turso libsql drizzle client
 │   │   ├── local.ts       dexie.js indexed-db store for offline writes
 │   │   └── write.ts       shared insert helpers
-│   ├── auth.ts            lucia v3 adapter over drizzle (hand-rolled)
+│   ├── auth.ts            lucia v3 adapter over drizzle
 │   ├── parser.ts          token-map set input parser
 │   ├── rewrite.ts         fatigue rules engine + prescription mutation
 │   └── sync.ts            background sync (online event + /api/sync)
 ├── routes/
-│   ├── +layout.svelte     responsive shell (sidebar md+, bottom nav mobile)
+│   ├── +layout.svelte     responsive shell
 │   ├── +page.svelte       today dashboard (stat strip, prescriptions, sets, parser panel)
 │   ├── +page.server.ts    sveltekit load — drizzle queries for today's data
 │   ├── api/
@@ -110,7 +109,7 @@ npm test                 # watch mode
 npm test -- --run        # single pass
 ```
 
-covers: standard templates, unit conversion (lbs→kg), duration/distance, set-type keywords, rpe `@` prefix, error cases, edge cases.
+covers: standard templates, unit conversion (lbs -> kg), duration/distance, set-type keywords, rpe `@` prefix, error cases, edge cases.
 
 ---
 
@@ -129,3 +128,5 @@ covers: standard templates, unit conversion (lbs→kg), duration/distance, set-t
 **deps** — `--legacy-peer-deps` required at install time due to `lucide-svelte@1.x` peer range vs. svelte 5 minor version. no runtime impact.
 
 **pwa icons** — `static/icons/icon-192.png` and `icon-512.png` are minimal solid-black pngs (raw zlib/png, no imagemagick dependency). replace with real artwork before shipping.
+
+<div align="center"><p>built with :) by jayan</p></div>

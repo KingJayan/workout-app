@@ -4,17 +4,17 @@
 	"version": "0.0.1",
 	"type": "module",
 	"scripts": {
-		"dev": "vite dev",
-		"build": "vite build",
-		"test": "vitest",
-		"preview": "vite preview",
-		"prepare": "svelte-kit sync || echo ''",
-		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-		"db:generate": "drizzle-kit generate",
-		"db:migrate": "drizzle-kit migrate",
-		"db:push": "drizzle-kit push",
-		"db:studio": "drizzle-kit studio"
+		"dev": "npx vite dev",
+		"build": "npx vite build",
+		"test": "npx vitest",
+		"preview": "npx vite preview",
+		"prep": "npx svelte-kit sync || echo ''",
+		"prep:check": "npx svelte-check --output human 2>&1 | tail -20",
+		"check": "npx svelte-kit sync && npx svelte-check --tsconfig ./tsconfig.json",
+		"db:generate": "npx drizzle-kit generate",
+		"db:migrate": "npx drizzle-kit migrate",
+		"db:push": "npx drizzle-kit push",
+		"db:studio": "npx drizzle-kit studio"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^7.0.1",

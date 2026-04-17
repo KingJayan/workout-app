@@ -32,9 +32,31 @@ export type LocalSet = {
 	createdAt: number;
 };
 
+export type LocalPrescription = {
+	id: number;
+	userId: string;
+	date: string;
+	gearProfileId: number | null;
+	algorithmVersion: string;
+	payload: string; // JSON string — avoids Dexie deep-clone issues
+	status: 'pending' | 'accepted' | 'modified' | 'skipped';
+	generatedAt: number;
+};
+
+export type LocalRecovery = {
+	id: number;
+	userId: string;
+	date: string;
+	sleepHours: number | null;
+	subjectiveReadiness: number | null;
+	notes: string | null;
+};
+
 class WorkoutDB extends Dexie {
 	workouts!: EntityTable<LocalWorkout, 'id'>;
 	sets!: EntityTable<LocalSet, 'id'>;
+	prescriptions!: EntityTable<LocalPrescription, 'id'>;
+	recovery!: EntityTable<LocalRecovery, 'id'>;
 
 	constructor() {
 		super('workout-app-v1');
@@ -43,6 +65,13 @@ class WorkoutDB extends Dexie {
 			// only indexed fields listed; dexie stores the full object
 			workouts: 'id, userId, startedAt, synced',
 			sets: 'id, workoutId, userId, exerciseId, loggedAt, synced, [workoutId+setIndex]'
+		});
+
+		this.version(2).stores({
+			workouts: 'id, userId, startedAt, synced',
+			sets: 'id, workoutId, userId, exerciseId, loggedAt, synced, [workoutId+setIndex]',
+			prescriptions: 'id, userId, date',
+			recovery: 'id, userId, date'
 		});
 	}
 }

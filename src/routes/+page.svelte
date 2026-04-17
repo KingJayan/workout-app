@@ -1,6 +1,9 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { parseSetInput } from '$lib/parser.js';
+	import { localDb, type LocalPrescription } from '$lib/db/local.js';
+	import type { PrescriptionPayload } from '$lib/db/schema.js';
+	import { onMount } from 'svelte';
 	import { Info } from 'lucide-svelte';
 
 	let { data }: { data: PageData } = $props();
@@ -12,6 +15,145 @@
 			? parseSetInput(data.parserTemplate, parserInput)
 			: null
 	);
+
+	// dashboard data — hydrated by onMount fetch or Dexie fallback
+	type RecentSet = {
+		id: string;
+		exerciseName: string;
+		setIndex: number;
+		reps: number | null;
+		loadKg: number | null;
+		rpe: number | null;
+		setType: string;
+		rawInput: string | null;
+		loggedAt: string;
+		workoutId: string;
+	};
+
+	type RxItem = {
+		id: number;
+		status: string;
+		payload: PrescriptionPayload;
+	};
+
+	type Stats = {
+		volumeLoad: number;
+		sessionCount: number;
+		readiness: number | null;
+		sleepHours: number | null;
+	};
+
+	let prescriptionList = $state<RxItem[]>([]);
+	let recentSets = $state<RecentSet[]>([]);
+	let stats = $state<Stats>({ volumeLoad: 0, sessionCount: 0, readiness: null, sleepHours: null });
+	let dataSource = $state<'server' | 'local' | 'loading'>('loading');
+
+	onMount(async () => {
+		try {
+			const res = await fetch('/api/dashboard');
+			if (!res.ok) throw new Error('non-ok response');
+			const d = await res.json();
+
+			prescriptionList = d.prescriptions;
+			recentSets = d.recentSets;
+			stats = d.stats;
+			dataSource = 'server';
+
+			// cache prescriptions + recovery to dexie for offline use
+			if (d.prescriptions.length > 0) {
+				await localDb.prescriptions.bulkPut(
+					d.prescriptions.map((rx: RxItem) => ({
+						id: rx.id,
+						userId: '',
+						date: data.today,
+						gearProfileId: null,
+						algorithmVersion: '1.0',
+						payload: JSON.stringify(rx.payload),
+						status: rx.status as LocalPrescription['status'],
+						generatedAt: Date.now()
+					}))
+				);
+			}
+			if (d.recovery) {
+				await localDb.recovery.put({
+					id: d.recovery.id,
+					userId: '',
+					date: data.today,
+					sleepHours: d.recovery.sleepHours,
+					subjectiveReadiness: d.recovery.subjectiveReadiness,
+					notes: d.recovery.notes ?? null
+				});
+			}
+		} catch {
+			// offline — read from dexie
+			const [localRx, localRecovery, localSets, localWorkouts] = await Promise.all([
+				localDb.prescriptions.where('date').equals(data.today).toArray(),
+				localDb.recovery.where('date').equals(data.today).first(),
+				localDb.sets.where('loggedAt').startsWith(data.today).toArray(),
+				localDb.workouts.where('startedAt').startsWith(data.today).toArray()
+			]);
+
+			prescriptionList = localRx.map((rx) => ({
+				id: rx.id,
+				status: rx.status,
+				payload: JSON.parse(rx.payload) as PrescriptionPayload
+			}));
+
+			recentSets = localSets
+				.sort((a, b) => b.loggedAt.localeCompare(a.loggedAt))
+				.slice(0, 50)
+				.map((s) => ({
+					id: s.id,
+					exerciseName: s.exerciseName,
+					setIndex: s.setIndex,
+					reps: s.reps,
+					loadKg: s.loadKg,
+					rpe: s.rpe,
+					setType: s.setType,
+					rawInput: s.rawInput,
+					loggedAt: s.loggedAt,
+					workoutId: s.workoutId
+				}));
+
+			// compute volume from local sets in last 7 days
+			const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+				.toISOString()
+				.slice(0, 10);
+			const weekSets = await localDb.sets
+				.filter((s) => s.loggedAt >= weekAgo)
+				.toArray();
+			const volumeLoad = weekSets.reduce(
+				(acc, s) => acc + (s.loadKg ?? 0) * (s.reps ?? 0),
+				0
+			);
+			const sessionCount = new Set(
+				localWorkouts.filter((w) => w.startedAt >= weekAgo).map((w) => w.id)
+			).size;
+
+			stats = {
+				volumeLoad,
+				sessionCount,
+				readiness: localRecovery?.subjectiveReadiness ?? null,
+				sleepHours: localRecovery?.sleepHours ?? null
+			};
+			dataSource = 'local';
+		}
+	});
+
+	let statStrip = $derived([
+		{ label: 'Volume', value: fmt(Math.round(stats.volumeLoad)), unit: 'kg·reps' },
+		{ label: 'Sessions', value: stats.sessionCount.toString(), unit: 'this week' },
+		{
+			label: 'Readiness',
+			value: stats.readiness !== null ? stats.readiness + '/10' : '—',
+			unit: 'today'
+		},
+		{
+			label: 'Sleep',
+			value: stats.sleepHours !== null ? stats.sleepHours + 'h' : '—',
+			unit: 'last night'
+		}
+	]);
 
 	function fmt(n: number): string {
 		return n >= 1000 ? (n / 1000).toFixed(1) + 'k' : n.toString();
@@ -26,33 +168,9 @@
 		return iso.slice(11, 16);
 	}
 
-	let stats = $derived([
-		{
-			label: 'Volume',
-			value: fmt(Math.round(data.stats.volumeLoad)),
-			unit: 'kg·reps'
-		},
-		{
-			label: 'Sessions',
-			value: data.stats.sessionCount.toString(),
-			unit: 'this week'
-		},
-		{
-			label: 'Readiness',
-			value: data.stats.readiness !== null ? data.stats.readiness + '/10' : '—',
-			unit: 'today'
-		},
-		{
-			label: 'Sleep',
-			value: data.stats.sleepHours !== null ? data.stats.sleepHours + 'h' : '—',
-			unit: 'last night'
-		}
-	]);
-
 	async function submitSet(e: Event) {
 		e.preventDefault();
 		if (!parsePreview || !parsePreview.ok) return;
-		// POST to /api/sync or a dedicated set-log endpoint
 		parserInput = '';
 	}
 
@@ -73,29 +191,43 @@
 		<!-- header -->
 		<header class="page-header">
 			<h1 class="page-title">Today</h1>
-			<span class="page-date font-data">{data.today}</span>
+			<div class="page-header-right">
+				{#if dataSource === 'local'}
+					<span class="offline-badge font-data">offline</span>
+				{/if}
+				<span class="page-date font-data">{data.today}</span>
+			</div>
 		</header>
 
 		<!-- stat strip -->
 		<div class="stat-strip card">
-			{#each stats as s, i}
-				<div class="stat-cell" class:stat-border={i > 0}>
-					<p class="stat-label">{s.label}</p>
-					<p class="stat-value font-data">{s.value}</p>
-					<p class="stat-unit font-data">{s.unit}</p>
-				</div>
-			{/each}
+			{#if dataSource === 'loading'}
+				{#each [0, 1, 2, 3] as _}
+					<div class="stat-cell">
+						<p class="stat-label skeleton skeleton-label"></p>
+						<p class="stat-value skeleton skeleton-value"></p>
+					</div>
+				{/each}
+			{:else}
+				{#each statStrip as s, i}
+					<div class="stat-cell" class:stat-border={i > 0}>
+						<p class="stat-label">{s.label}</p>
+						<p class="stat-value font-data">{s.value}</p>
+						<p class="stat-unit font-data">{s.unit}</p>
+					</div>
+				{/each}
+			{/if}
 		</div>
 
 		<!-- prescriptions -->
-		{#if data.prescriptions.length > 0}
+		{#if prescriptionList.length > 0}
 			<section class="section">
 				<div class="section-header">
 					<span class="section-title">Prescription</span>
 					<span class="badge">{data.today}</span>
 				</div>
 				<div class="rx-list">
-					{#each data.prescriptions as rx}
+					{#each prescriptionList as rx}
 						<div class="rx-card card" class:rx-modified={rx.status === 'modified'}>
 							{#if rx.status === 'modified'}
 								<div class="rx-modified-banner">
@@ -135,7 +267,7 @@
 		<section class="section">
 			<div class="section-header">
 				<span class="section-title">Today's sets</span>
-				<span class="badge font-data">{data.recentSets.length}</span>
+				<span class="badge font-data">{recentSets.length}</span>
 			</div>
 			<div class="card overflow-hidden">
 				<table class="table-base">
@@ -149,12 +281,16 @@
 						</tr>
 					</thead>
 					<tbody>
-						{#if data.recentSets.length === 0}
+						{#if dataSource === 'loading'}
+							<tr>
+								<td colspan="5" class="empty-state">Loading...</td>
+							</tr>
+						{:else if recentSets.length === 0}
 							<tr>
 								<td colspan="5" class="empty-state">No sets logged today.</td>
 							</tr>
 						{:else}
-							{#each data.recentSets as s}
+							{#each recentSets as s}
 								<tr>
 									<td>{s.exerciseName}</td>
 									<td class="font-data">{s.reps ?? '—'}</td>
@@ -264,6 +400,12 @@
 		margin-bottom: 1.25rem;
 	}
 
+	.page-header-right {
+		display: flex;
+		align-items: baseline;
+		gap: 0.5rem;
+	}
+
 	.page-title {
 		font-size: 0.9375rem;
 		font-weight: 600;
@@ -274,6 +416,16 @@
 	.page-date {
 		font-size: 0.75rem;
 		color: var(--fg-muted);
+	}
+
+	.offline-badge {
+		font-size: 0.625rem;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--fg-muted);
+		border: 1px solid var(--border);
+		padding: 0.0625rem 0.3125rem;
+		border-radius: 2px;
 	}
 
 	/* stat strip */
@@ -311,6 +463,29 @@
 		font-size: 0.6875rem;
 		color: var(--fg-muted);
 		margin: 0.25rem 0 0;
+	}
+
+	/* skeleton shimmer */
+	.skeleton {
+		background-color: var(--muted);
+		border-radius: 2px;
+		animation: shimmer 1.2s ease-in-out infinite;
+	}
+
+	.skeleton-label {
+		width: 50%;
+		height: 0.6875rem;
+		margin-bottom: 0.375rem;
+	}
+
+	.skeleton-value {
+		width: 70%;
+		height: 1rem;
+	}
+
+	@keyframes shimmer {
+		0%, 100% { opacity: 0.4; }
+		50% { opacity: 0.8; }
 	}
 
 	/* sections */
