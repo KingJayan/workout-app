@@ -9,7 +9,9 @@ type SyncPayload = {
 	sets: LocalSet[];
 };
 
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ request, locals }) => {
+	if (!locals.user) return error(401, 'not authenticated');
+
 	let payload: SyncPayload;
 
 	try {
@@ -20,6 +22,12 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	if (!Array.isArray(payload.workouts) || !Array.isArray(payload.sets)) {
 		return error(400, 'workouts and sets must be arrays');
+	}
+
+	// reject any record that doesn't belong to the authenticated user
+	const uid = locals.user.id;
+	if (payload.workouts.some((w) => w.userId !== uid) || payload.sets.some((s) => s.userId !== uid)) {
+		return error(403, 'userId mismatch');
 	}
 
 	const syncedWorkoutIds: string[] = [];

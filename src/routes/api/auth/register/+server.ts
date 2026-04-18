@@ -3,7 +3,7 @@ import { db } from '$db/client.js';
 import { users } from '$db/schema.js';
 import { lucia } from '$lib/auth.js';
 import { eq } from 'drizzle-orm';
-import { sha256 } from '@oslojs/crypto/sha2';
+import { hash as argon2hash } from '@node-rs/argon2';
 import { encodeHexLowerCase } from '@oslojs/encoding';
 import type { RequestHandler } from './$types';
 
@@ -30,7 +30,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 	const existing = await db.select().from(users).where(eq(users.email, body.email)).get();
 	if (existing) return error(409, 'email already registered');
 
-	const hash = encodeHexLowerCase(sha256(new TextEncoder().encode(body.password)));
+	const hash = await argon2hash(body.password, { memoryCost: 19456, timeCost: 2, outputLen: 32, parallelism: 1 });
 	const userId = generateId();
 
 	await db.insert(users).values({
