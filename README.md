@@ -67,7 +67,9 @@ npm install --legacy-peer-deps
 
 ```sh
 # install turso cli if needed
-curl -sSfL https://get.turso.io | bash
+curl -sSfL https://get.tur.so/install.sh | bash
+#OR
+brew install tursodatabase/tap/turso
 
 turso db create workout-app
 turso db show workout-app --url   # → TURSO_DATABASE_URL
