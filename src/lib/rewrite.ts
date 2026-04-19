@@ -26,6 +26,7 @@ export type RewriteResult = {
 	reason: string | null;
 	setsDropped: number;
 	exercisesSwapped: number;
+	noAlternativeFound: boolean;
 };
 
 // compound barbell movements that get swapped under fatigue
@@ -186,9 +187,10 @@ function applyRewrite(
 	payload: PrescriptionPayload,
 	trigger: FatigueTrigger,
 	gear: GearProfile | null
-): { payload: PrescriptionPayload; setsDropped: number; exercisesSwapped: number } {
+): { payload: PrescriptionPayload; setsDropped: number; exercisesSwapped: number; noAlternativeFound: boolean } {
 	let setsDropped = 0;
 	let exercisesSwapped = 0;
+	let noAlternativeFound = false;
 
 	const exercises: PrescriptionExercise[] = payload.exercises.map((ex) => {
 		let { sets, name } = ex;
@@ -201,11 +203,17 @@ function applyRewrite(
 
 		// swap compound → isolated if gear permits
 		let newName = name;
-		if (trigger.swapCompounds && isCompound && gear) {
-			const alt = pickAlternative(name, gear);
-			if (alt) {
-				newName = alt;
-				exercisesSwapped++;
+		if (trigger.swapCompounds && isCompound) {
+			if (gear) {
+				const alt = pickAlternative(name, gear);
+				if (alt) {
+					newName = alt;
+					exercisesSwapped++;
+				} else {
+					noAlternativeFound = true;
+				}
+			} else {
+				noAlternativeFound = true;
 			}
 		}
 
@@ -222,7 +230,8 @@ function applyRewrite(
 	return {
 		payload: { ...payload, exercises, targetVolumeLoad: newVolumeLoad },
 		setsDropped,
-		exercisesSwapped
+		exercisesSwapped,
+		noAlternativeFound
 	};
 }
 
@@ -231,7 +240,7 @@ export async function rewritePrescription(ctx: RewriteContext): Promise<RewriteR
 
 	const trigger = evaluateTriggers(ctx.recovery, ctx.upcomingEvents, nowMs);
 	if (!trigger.triggered) {
-		return { rewritten: false, reason: null, setsDropped: 0, exercisesSwapped: 0 };
+		return { rewritten: false, reason: null, setsDropped: 0, exercisesSwapped: 0, noAlternativeFound: false };
 	}
 
 	const prescription = await db
@@ -241,7 +250,7 @@ export async function rewritePrescription(ctx: RewriteContext): Promise<RewriteR
 		.get();
 
 	if (!prescription || prescription.status === 'skipped') {
-		return { rewritten: false, reason: null, setsDropped: 0, exercisesSwapped: 0 };
+		return { rewritten: false, reason: null, setsDropped: 0, exercisesSwapped: 0, noAlternativeFound: false };
 	}
 
 	let gear: GearProfile | null = null;
@@ -253,7 +262,7 @@ export async function rewritePrescription(ctx: RewriteContext): Promise<RewriteR
 			.get() ?? null;
 	}
 
-	const { payload, setsDropped, exercisesSwapped } = applyRewrite(
+	const { payload, setsDropped, exercisesSwapped, noAlternativeFound } = applyRewrite(
 		prescription.payload,
 		trigger,
 		gear
@@ -264,5 +273,5 @@ export async function rewritePrescription(ctx: RewriteContext): Promise<RewriteR
 		.set({ payload, status: 'modified', algorithmVersion: '1.1' })
 		.where(eq(prescriptions.id, ctx.prescriptionId));
 
-	return { rewritten: true, reason: trigger.reason, setsDropped, exercisesSwapped };
+	return { rewritten: true, reason: trigger.reason, setsDropped, exercisesSwapped, noAlternativeFound };
 }

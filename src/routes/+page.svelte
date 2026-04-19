@@ -5,6 +5,7 @@
 	import type { PrescriptionPayload } from '$lib/db/schema.js';
 	import { onMount } from 'svelte';
 	import { Info } from 'lucide-svelte';
+	import { toast } from '$lib/toast.js';
 
 	let { data }: { data: PageData } = $props();
 
@@ -178,6 +179,44 @@
 		if (e.key === 'Enter') submitSet(e);
 		if (e.key === 'Escape') parserInput = '';
 	}
+
+	let rewriting = $state<number | null>(null);
+
+	async function triggerRewrite(rxId: number) {
+		rewriting = rxId;
+		try {
+			const res = await fetch('/api/prescriptions/rewrite', {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({
+					prescriptionId: rxId,
+					recovery: { sleepHours: stats.sleepHours, subjectiveReadiness: stats.readiness },
+					upcomingEvents: []
+				})
+			});
+			if (!res.ok) throw new Error('rewrite failed');
+			const result = await res.json();
+			if (!result.rewritten) {
+				toast('no changes — conditions normal', 'info');
+			} else {
+				const parts = [];
+				if (result.setsDropped > 0) parts.push(`${result.setsDropped} sets dropped`);
+				if (result.exercisesSwapped > 0) parts.push(`${result.exercisesSwapped} swapped`);
+				toast(parts.length ? parts.join(', ') : 'adjusted', 'info');
+				if (result.noAlternativeFound) toast('some exercises kept — no gear alternative', 'error');
+				// refresh prescriptions from server
+				const dash = await fetch('/api/dashboard');
+				if (dash.ok) {
+					const d = await dash.json();
+					prescriptionList = d.prescriptions;
+				}
+			}
+		} catch {
+			toast('rewrite failed — try again', 'error');
+		} finally {
+			rewriting = null;
+		}
+	}
 </script>
 
 <svelte:head>
@@ -237,7 +276,18 @@
 							{/if}
 							<div class="rx-header">
 								<span class="rx-session-type">{rx.payload.sessionType}</span>
-								<span class="badge rx-status">{rx.status}</span>
+								<div class="rx-header-right">
+									<span class="badge rx-status">{rx.status}</span>
+									{#if rx.status !== 'modified' && dataSource === 'server'}
+										<button
+											class="btn-base btn-ghost rx-rewrite-btn"
+											onclick={() => triggerRewrite(rx.id)}
+											disabled={rewriting === rx.id}
+										>
+											{rewriting === rx.id ? '…' : 'adapt'}
+										</button>
+									{/if}
+								</div>
 							</div>
 							<div class="rx-exercises">
 								{#each rx.payload.exercises as ex}
@@ -546,8 +596,20 @@
 		font-weight: 500;
 	}
 
+	.rx-header-right {
+		display: flex;
+		align-items: center;
+		gap: 0.375rem;
+	}
+
 	.rx-status {
 		text-transform: capitalize;
+	}
+
+	.rx-rewrite-btn {
+		font-size: 0.6875rem;
+		padding: 0.125rem 0.375rem;
+		color: var(--fg-muted);
 	}
 
 	.rx-exercises {

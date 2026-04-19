@@ -4,8 +4,12 @@
 	import { onMount } from 'svelte';
 	import { Dumbbell, CalendarDays, BarChart3, Settings, Zap } from 'lucide-svelte';
 	import type { Snippet } from 'svelte';
+	import Toast from '$lib/components/Toast.svelte';
+	import { toast } from '$lib/toast.js';
 
 	let { children }: { children: Snippet } = $props();
+
+	let isOnline = $state(true);
 
 	const navItems = [
 		{ href: '/', label: 'Today', Icon: Dumbbell },
@@ -24,6 +28,16 @@
 	let showInstall = $state(false);
 
 	onMount(() => {
+		isOnline = navigator.onLine;
+		window.addEventListener('online', () => {
+			isOnline = true;
+			toast('back online', 'info');
+		});
+		window.addEventListener('offline', () => {
+			isOnline = false;
+			toast('offline — using cached data', 'error');
+		});
+
 		window.addEventListener('beforeinstallprompt', (e) => {
 			e.preventDefault();
 			deferredPrompt = e as InstallPrompt;
@@ -48,6 +62,11 @@
 		return $page.url.pathname.startsWith(href);
 	}
 </script>
+
+<Toast />
+{#if !isOnline}
+	<div class="offline-bar" aria-live="polite">offline</div>
+{/if}
 
 <div class="layout">
 	<aside class="sidebar">
@@ -99,6 +118,23 @@
 </div>
 
 <style>
+	.offline-bar {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		z-index: 100;
+		text-align: center;
+		font-size: 0.625rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		font-family: var(--font-mono);
+		color: var(--fg-muted);
+		background-color: var(--surface);
+		border-bottom: 1px solid var(--border);
+		padding: 0.1875rem 0;
+	}
+
 	.layout {
 		display: flex;
 		min-height: 100dvh;
