@@ -61,6 +61,9 @@ export const actions: Actions = {
 		if (typeof email !== 'string' || typeof password !== 'string' || !email || !password) {
 			return fail(400, { error: 'Email and password are required.' });
 		}
+		if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+			return fail(400, { error: 'Enter a valid email address.' });
+		}
 		if (password.length < 8) {
 			return fail(400, { error: 'Password must be at least 8 characters.' });
 		}

@@ -1,34 +1,38 @@
 import { sql } from 'drizzle-orm';
-import {
-	integer,
-	real,
-	sqliteTable,
-	text,
-	uniqueIndex
-} from 'drizzle-orm/sqlite-core';
+import { integer, real, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
-export const users = sqliteTable('users', {
-	id: text('id').primaryKey(),
-	authProvider: text('auth_provider').notNull().default('email'),
-	authProviderId: text('auth_provider_id').notNull(),
-	email: text('email').notNull(),
-	displayName: text('display_name'),
-	preferences: text('preferences', { mode: 'json' }).$type<UserPreferences>().default({}),
-	// user-defined shorthand log template e.g. "3x8 @135 bench"
-	parserTemplate: text('parser_template'),
-	createdAt: integer('created_at', { mode: 'timestamp_ms' })
-		.notNull()
-		.default(sql`(unixepoch() * 1000)`),
-	updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
-		.notNull()
-		.default(sql`(unixepoch() * 1000)`)
-});
+export const users = sqliteTable(
+	'users',
+	{
+		id: text('id').primaryKey(),
+		authProvider: text('auth_provider').notNull().default('email'),
+		authProviderId: text('auth_provider_id').notNull(),
+		email: text('email').notNull(),
+		displayName: text('display_name'),
+		preferences: text('preferences', { mode: 'json' }).$type<UserPreferences>().default({}),
+		parserTemplate: text('parser_template'),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(unixepoch() * 1000)`),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(unixepoch() * 1000)`)
+	},
+	(t) => [uniqueIndex('users_email_uidx').on(t.email)]
+);
+
+export type RewriteThresholds = {
+	minSleepHours?: number;       // default 6
+	eventWindowHours?: number;    // default 48
+	eventIntensityMin?: number;   // default 7
+};
 
 export type UserPreferences = {
 	timezone?: string;
 	units?: 'metric' | 'imperial';
 	weekStartsOn?: 0 | 1;
 	theme?: 'light' | 'dark' | 'system';
+	rewriteThresholds?: RewriteThresholds;
 };
 
 export const recoveryMetrics = sqliteTable(

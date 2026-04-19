@@ -1,4 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie';
+import type { PrescriptionPayload } from '$lib/db/schema.js';
 
 export type LocalWorkout = {
 	id: string;
@@ -38,7 +39,7 @@ export type LocalPrescription = {
 	date: string;
 	gearProfileId: number | null;
 	algorithmVersion: string;
-	payload: string; // JSON string — avoids Dexie deep-clone issues
+	payload: PrescriptionPayload;
 	status: 'pending' | 'accepted' | 'modified' | 'skipped';
 	generatedAt: number;
 };

@@ -1,7 +1,7 @@
 import { db } from '$db/client.js';
-import { prescriptions, gearProfiles } from '$db/schema.js';
+import { prescriptions, gearProfiles, users } from '$db/schema.js';
 import { eq, and } from 'drizzle-orm';
-import type { GearProfile, PrescriptionExercise, PrescriptionPayload } from '$db/schema.js';
+import type { GearProfile, PrescriptionExercise, PrescriptionPayload, RewriteThresholds } from '$db/schema.js';
 
 export type RecoverySnapshot = {
 	sleepHours: number | null;
@@ -120,19 +120,23 @@ type FatigueTrigger = {
 function evaluateTriggers(
 	recovery: RecoverySnapshot,
 	upcomingEvents: UpcomingEvent[],
-	nowMs: number
+	nowMs: number,
+	thresholds: RewriteThresholds = {}
 ): FatigueTrigger {
+	const minSleep = thresholds.minSleepHours ?? 6;
+	const eventWindow = (thresholds.eventWindowHours ?? 48) * 60 * 60 * 1000;
+	const eventIntensityMin = thresholds.eventIntensityMin ?? 7;
 	const triggers: FatigueTrigger[] = [];
 
 	// rule: poor sleep
-	if (recovery.sleepHours !== null && recovery.sleepHours < 6) {
-		const deficit = 6 - recovery.sleepHours;
+	if (recovery.sleepHours !== null && recovery.sleepHours < minSleep) {
+		const deficit = minSleep - recovery.sleepHours;
 		// scale drop: 10% per hour under 6, capped at 40%
 		triggers.push({
 			triggered: true,
 			setDropPct: Math.min(deficit * 0.1, 0.4),
 			swapCompounds: deficit >= 2,
-			reason: `sleep ${recovery.sleepHours}h (under 6h threshold)`
+			reason: `sleep ${recovery.sleepHours}h (under ${minSleep}h threshold)`
 		});
 	}
 
@@ -146,11 +150,11 @@ function evaluateTriggers(
 		});
 	}
 
-	// rule: high-exertion event within 48 hours
-	const h48 = nowMs + 48 * 60 * 60 * 1000;
+	// rule: high-exertion event within configured window
+	const windowEnd = nowMs + eventWindow;
 	for (const ev of upcomingEvents) {
 		const evMs = new Date(ev.startsAt).getTime();
-		if (evMs > nowMs && evMs <= h48 && (ev.intensityRating ?? 0) >= 7) {
+		if (evMs > nowMs && evMs <= windowEnd && (ev.intensityRating ?? 0) >= eventIntensityMin) {
 			triggers.push({
 				triggered: true,
 				setDropPct: 0.25,
@@ -238,7 +242,10 @@ function applyRewrite(
 export async function rewritePrescription(ctx: RewriteContext): Promise<RewriteResult> {
 	const nowMs = Date.now();
 
-	const trigger = evaluateTriggers(ctx.recovery, ctx.upcomingEvents, nowMs);
+	const userRow = await db.select({ preferences: users.preferences }).from(users).where(eq(users.id, ctx.userId)).get();
+	const thresholds = userRow?.preferences?.rewriteThresholds ?? {};
+
+	const trigger = evaluateTriggers(ctx.recovery, ctx.upcomingEvents, nowMs, thresholds);
 	if (!trigger.triggered) {
 		return { rewritten: false, reason: null, setsDropped: 0, exercisesSwapped: 0, noAlternativeFound: false };
 	}

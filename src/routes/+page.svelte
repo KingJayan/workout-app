@@ -97,7 +97,7 @@
 			prescriptionList = localRx.map((rx) => ({
 				id: rx.id,
 				status: rx.status,
-				payload: JSON.parse(rx.payload) as PrescriptionPayload
+				payload: rx.payload
 			}));
 
 			recentSets = localSets
