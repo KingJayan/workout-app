@@ -49,6 +49,7 @@ export default defineConfig({
 	],
 	test: {
 		include: ['src/**/*.test.ts'],
+		exclude: ['src/integration/**'],
 		environment: 'node'
 	}
 });

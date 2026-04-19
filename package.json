@@ -14,7 +14,13 @@
 		"db:generate": "npx drizzle-kit generate",
 		"db:migrate": "npx drizzle-kit migrate",
 		"db:push": "npx drizzle-kit push",
-		"db:studio": "npx drizzle-kit studio"
+		"db:studio": "npx drizzle-kit studio",
+		"lint": "npx eslint src --max-warnings 0",
+		"test:integration": "npx vitest --run --config vitest.integration.config.ts",
+		"prepare": "husky"
+	},
+	"lint-staged": {
+		"*.{ts,svelte}": "eslint --max-warnings 0"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^7.0.1",
@@ -22,9 +28,18 @@
 		"@sveltejs/kit": "^2.57.0",
 		"@sveltejs/vite-plugin-svelte": "^7.0.0",
 		"@tailwindcss/vite": "^4.2.2",
+		"@typescript-eslint/eslint-plugin": "^8.58.2",
+		"@typescript-eslint/parser": "^8.58.2",
+		"@vitest/browser": "^4.1.4",
+		"eslint": "^10.2.1",
+		"eslint-plugin-svelte": "^3.17.0",
+		"happy-dom": "^20.9.0",
+		"husky": "^9.1.7",
+		"lint-staged": "^16.4.0",
 		"lucide-svelte": "^1.0.1",
 		"svelte": "^5.55.2",
 		"svelte-check": "^4.4.6",
+		"svelte-eslint-parser": "^1.6.0",
 		"tailwindcss": "^4.2.2",
 		"typescript": "^6.0.2",
 		"vite": "^8.0.7",
