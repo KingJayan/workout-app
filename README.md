@@ -72,25 +72,25 @@ curl -sSfL https://get.tur.so/install.sh | bash
 brew install tursodatabase/tap/turso
 
 turso db create workout-app
-turso db show workout-app --url   # → TURSO_DATABASE_URL
-turso db tokens create workout-app  # → TURSO_AUTH_TOKEN
 ```
 
 ### 3. env
 
 ```sh
 cp .env.example .env
-# fill in:
-# TURSO_DATABASE_URL=libsql://your-db.turso.io
-# TURSO_AUTH_TOKEN=your-auth-token
+
+# copy these into .env (no quotes)
+turso db show workout-app --url
+turso db tokens create workout-app
 ```
 
 ### 4. migrate
 
 ```sh
-npm run db:push          # push schema to turso (dev)
-# or for production migrations:
-npm run db:generate      # generate sql in ./drizzle
+# dev: push schema to turso
+npm run db:push
+# for production migrations:
+npm run db:generate      # gen sql in ./drizzle
 npm run db:migrate       # apply migrations
 ```
 
@@ -104,7 +104,7 @@ npm run dev
 
 ## tests
 
-parser unit tests only (vitest, no browser required):
+parser unit tests only (vitest):
 
 ```sh
 npm test                 # watch mode
@@ -117,18 +117,16 @@ covers: standard templates, unit conversion (lbs -> kg), duration/distance, set-
 
 ## notes
 
-**parser design** — template drives tokenization. separators between `[token]` placeholders become regex delimiters; falls back to whitespace split if regex construction fails. this means the parser is user-configurable per-account (`users.parser_template`) without code changes.
+**parser design** - template drives tokenization. the parser is user-configurable per-account (`users.parser_template`) without code changes
 
-**rewrite algorithm** — rules are additive: multiple triggers merge by taking `max(setDropPct)` (capped at 50%) and `OR`-ing swap flags. adding a new rule is one push to the `triggers` array inside `evaluateTriggers`. no ML, no external call.
+**rewrite algorithm** - rules are additive: multiple triggers merge by taking `max(setDropPct)` (capped at 50%) and `OR`-ing swap flags. no external calls
 
-**offline-first** — writes go to dexie indexed-db first (`synced: false`), then `/api/sync` upserts them to turso on next `online` event. server-rendered pages still query turso directly (no local read path yet).
+**offline-first** — writes go to dexie indexed-db first (`synced: false`), then `/api/sync` upserts them to turso on next `online` event. server-rendered pages still query turso directly (no local read path yet)
 
-**auth** — lucia v3 with a hand-rolled drizzle adapter (no magic ORM plugin). sessions stored in `sessions` table; cookie is httpOnly, secure in production.
+**auth** — lucia v3 with a hand-rolled drizzle adapter (no magic ORM plugin)
 
-**no rounding beyond `rounded-sm`** — design system is strict monochrome, 1px borders, inter + jetbrains mono. tailwind v4 `@theme {}` block owns all tokens; no arbitrary values in components.
+**deps** — `--legacy-peer-deps` required at install time due to `lucide-svelte@1.x` peer range vs. svelte 5 minor version
 
-**deps** — `--legacy-peer-deps` required at install time due to `lucide-svelte@1.x` peer range vs. svelte 5 minor version. no runtime impact.
-
-**pwa icons** — `static/icons/icon-192.png` and `icon-512.png` are minimal solid-black pngs (raw zlib/png, no imagemagick dependency). replace with real artwork before shipping.
+**pwa icons** — `static/icons/icon-192.png` and `icon-512.png` are placeholders
 
 <div align="center"><p>built with :) by jayan</p></div>

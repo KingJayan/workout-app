@@ -1,7 +1,7 @@
 import { Lucia } from 'lucia';
 import { db } from '$db/client.js';
 import { sessions, users } from '$db/schema.js';
-import { eq } from 'drizzle-orm';
+import { eq, lt } from 'drizzle-orm';
 import type { Adapter, DatabaseSession, DatabaseUser, RegisteredDatabaseSessionAttributes } from 'lucia';
 import type { User } from '$db/schema.js';
 
@@ -63,7 +63,7 @@ const adapter: Adapter = {
 	async deleteExpiredSessions() {
 		await db
 			.delete(sessions)
-			.where(eq(sessions.expiresAt, Math.floor(Date.now() / 1000)));
+			.where(lt(sessions.expiresAt, Math.floor(Date.now() / 1000)));
 	}
 };
 
