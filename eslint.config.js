@@ -11,7 +11,7 @@ export default [
 	{
 		files: ['**/*.ts'],
 		plugins: { '@typescript-eslint': ts },
-		languageOptions: { parser: tsParser, parserOptions: { project: './tsconfig.json' } },
+		languageOptions: { parser: tsParser },
 		rules: {
 			...ts.configs['recommended'].rules,
 			'@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
@@ -23,7 +23,7 @@ export default [
 		plugins: { svelte, '@typescript-eslint': ts },
 		languageOptions: {
 			parser: svelteParser,
-			parserOptions: { parser: tsParser, project: './tsconfig.json', extraFileExtensions: ['.svelte'] }
+			parserOptions: { parser: tsParser, extraFileExtensions: ['.svelte'] }
 		},
 		rules: {
 			...svelte.configs.recommended.rules
