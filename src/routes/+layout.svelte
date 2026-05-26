@@ -6,6 +6,7 @@
 	import type { Snippet } from 'svelte';
 	import Toast from '$lib/components/Toast.svelte';
 	import { toast } from '$lib/toast.js';
+	import { registerOnlineSync } from '$lib/sync.js';
 
 	let { children }: { children: Snippet } = $props();
 
@@ -28,6 +29,7 @@
 	let showInstall = $state(false);
 
 	onMount(() => {
+		const unregisterSync = registerOnlineSync();
 		isOnline = navigator.onLine;
 		window.addEventListener('online', () => {
 			isOnline = true;

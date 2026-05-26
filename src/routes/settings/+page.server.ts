@@ -49,10 +49,12 @@ export const actions: Actions = {
 		const data = await request.formData();
 		const id = data.get('id');
 		if (typeof id !== 'string') return fail(400, { gearError: 'Missing id.' });
+		const parsed = parseInt(id, 10);
+		if (isNaN(parsed)) return fail(400, { gearError: 'Invalid id.' });
 
 		await db
 			.delete(gearProfiles)
-			.where(and(eq(gearProfiles.id, parseInt(id, 10)), eq(gearProfiles.userId, locals.user.id)));
+			.where(and(eq(gearProfiles.id, parsed), eq(gearProfiles.userId, locals.user.id)));
 
 		return { gearSuccess: true };
 	},
