@@ -15,10 +15,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
+          cache: pnpm
 
-      - run: npm install --legacy-peer-deps
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
 
-      - run: npm run lint
+      - run: corepack enable
 
-      - run: npm test -- --run
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm run lint
+
+      - run: pnpm test -- --run
