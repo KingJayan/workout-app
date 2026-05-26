@@ -10,6 +10,8 @@
 	let { data }: { data: PageData } = $props();
 
 	let parserInput = $state('');
+	let currentExercise = $state('');
+	let currentWorkoutId = $state('');
 	let parsePreview = $derived(
 		parserInput.trim()
 			? parseSetInput(data.parserTemplate, parserInput)
@@ -168,7 +170,54 @@
 
 	async function submitSet(e: Event) {
 		e.preventDefault();
-		if (!parsePreview || !parsePreview.ok) return;
+		if (!parsePreview || !parsePreview.ok || !currentExercise.trim()) return;
+
+		let workoutId = currentWorkoutId;
+		if (!workoutId) {
+			const existing = await localDb.workouts.where('startedAt').startsWith(data.today).first();
+			if (existing) {
+				workoutId = existing.id;
+			} else {
+				workoutId = crypto.randomUUID();
+				await localDb.workouts.add({
+					id: workoutId,
+					userId: '',
+					prescriptionId: null,
+					gearProfileId: null,
+					startedAt: new Date().toISOString(),
+					endedAt: null,
+					notes: null,
+					rawInput: null,
+					synced: false,
+					createdAt: Date.now()
+				});
+			}
+			currentWorkoutId = workoutId;
+		}
+
+		const setCount = await localDb.sets.where('workoutId').equals(workoutId).count();
+		const name = currentExercise.trim();
+		const set = {
+			id: crypto.randomUUID(),
+			workoutId,
+			userId: '',
+			exerciseId: name.toLowerCase().replace(/\s+/g, '-'),
+			exerciseName: name,
+			setIndex: setCount,
+			reps: parsePreview.data.reps,
+			loadKg: parsePreview.data.loadKg,
+			durationSeconds: parsePreview.data.durationSeconds,
+			distanceMeters: parsePreview.data.distanceMeters,
+			rpe: parsePreview.data.rpe,
+			setType: parsePreview.data.setType,
+			rawInput: parserInput,
+			loggedAt: new Date().toISOString(),
+			synced: false,
+			createdAt: Date.now()
+		};
+
+		await localDb.sets.add(set);
+		recentSets = [set, ...recentSets].slice(0, 50);
 		parserInput = '';
 	}
 
@@ -358,6 +407,15 @@
 		<div class="parser-inner card">
 			<p class="parser-label">Log set</p>
 			<form onsubmit={submitSet}>
+				<input
+					class="input-base parser-input"
+					bind:value={currentExercise}
+					placeholder="exercise"
+					autocomplete="off"
+					autocorrect="off"
+					spellcheck={false}
+					style="margin-bottom: 0.375rem;"
+				/>
 				<input
 					class="input-base parser-input"
 					bind:value={parserInput}

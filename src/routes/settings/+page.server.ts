@@ -2,7 +2,7 @@ import { redirect, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { db } from '$db/client.js';
 import { gearProfiles, users, googleAccounts } from '$db/schema.js';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) redirect(302, '/login');
@@ -52,7 +52,7 @@ export const actions: Actions = {
 
 		await db
 			.delete(gearProfiles)
-			.where(eq(gearProfiles.id, parseInt(id, 10)));
+			.where(and(eq(gearProfiles.id, parseInt(id, 10)), eq(gearProfiles.userId, locals.user.id)));
 
 		return { gearSuccess: true };
 	},
