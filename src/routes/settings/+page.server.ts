@@ -66,16 +66,8 @@ export const actions: Actions = {
 		const id = parseInt(data.get('id') as string, 10);
 		if (isNaN(id)) return fail(400, { gearError: 'Invalid id.' });
 
-		const allGear = await db.select({ id: gearProfiles.id }).from(gearProfiles)
-			.where(eq(gearProfiles.userId, locals.user.id)).all();
-
-		await Promise.all(
-			allGear.map((g) =>
-				db.update(gearProfiles)
-					.set({ isDefault: g.id === id })
-					.where(eq(gearProfiles.id, g.id))
-			)
-		);
+		await db.update(gearProfiles).set({ isDefault: false }).where(eq(gearProfiles.userId, locals.user.id));
+		await db.update(gearProfiles).set({ isDefault: true }).where(and(eq(gearProfiles.id, id), eq(gearProfiles.userId, locals.user.id)));
 
 		return { gearSuccess: true };
 	},

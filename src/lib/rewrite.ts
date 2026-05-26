@@ -250,7 +250,7 @@ export async function rewritePrescription(ctx: RewriteContext): Promise<RewriteR
 		.where(and(eq(prescriptions.id, ctx.prescriptionId), eq(prescriptions.userId, ctx.userId)))
 		.get();
 
-	if (!prescription || prescription.status === 'skipped') {
+	if (!prescription || prescription.status === 'skipped' || prescription.status === 'accepted') {
 		return { rewritten: false, reason: null, setsDropped: 0, exercisesSwapped: 0, noAlternativeFound: false };
 	}
 

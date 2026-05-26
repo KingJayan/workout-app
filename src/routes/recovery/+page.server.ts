@@ -38,9 +38,11 @@ export const actions: Actions = {
 		const sleepRaw = data.get('sleepHours');
 		const readinessRaw = data.get('subjectiveReadiness');
 		const notes = data.get('notes');
-		const date = data.get('date');
 
-		if (typeof date !== 'string' || !date) return fail(400, { error: 'Date is required.' });
+		const userId = locals.user.id;
+		const user = await db.select({ preferences: users.preferences }).from(users).where(eq(users.id, userId)).get();
+		const timezone = user?.preferences?.timezone;
+		const date = new Intl.DateTimeFormat('en-CA', { timeZone: timezone ?? 'UTC' }).format(new Date());
 
 		const sleepHours = sleepRaw ? parseFloat(sleepRaw as string) : null;
 		const subjectiveReadiness = readinessRaw ? parseInt(readinessRaw as string, 10) : null;
