@@ -1,14 +1,16 @@
 import { redirect, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { db } from '$db/client.js';
-import { recoveryMetrics } from '$db/schema.js';
+import { recoveryMetrics, users } from '$db/schema.js';
 import { eq, and, desc } from 'drizzle-orm';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) redirect(302, '/login');
 
 	const userId = locals.user.id;
-	const today = new Date().toISOString().slice(0, 10);
+	const user = await db.select({ preferences: users.preferences }).from(users).where(eq(users.id, userId)).get();
+	const timezone = user?.preferences?.timezone;
+	const today = new Intl.DateTimeFormat('en-CA', { timeZone: timezone ?? 'UTC' }).format(new Date());
 
 	const [todayMetric, recent] = await Promise.all([
 		db

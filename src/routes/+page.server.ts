@@ -7,11 +7,14 @@ import { eq } from 'drizzle-orm';
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) redirect(302, '/login');
 
-	const user = await db.select({ parserTemplate: users.parserTemplate })
+	const user = await db.select({ parserTemplate: users.parserTemplate, preferences: users.preferences })
 		.from(users).where(eq(users.id, locals.user.id)).get();
 
+	const timezone = user?.preferences?.timezone;
+	const today = new Intl.DateTimeFormat('en-CA', { timeZone: timezone ?? 'UTC' }).format(new Date());
+
 	return {
-		today: new Date().toISOString().slice(0, 10),
+		today,
 		parserTemplate: user?.parserTemplate ?? '[sets]x[reps] [weight] @[rpe]'
 	};
 };

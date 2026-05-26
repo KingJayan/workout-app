@@ -1,5 +1,5 @@
 import { db } from '$db/client.js';
-import { prescriptions, recoveryMetrics, workouts, sets } from '$db/schema.js';
+import { prescriptions, recoveryMetrics, workouts, sets, users } from '$db/schema.js';
 import { eq, and, desc, gte } from 'drizzle-orm';
 import { json, redirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
@@ -8,7 +8,9 @@ export const GET: RequestHandler = async ({ locals }) => {
 	if (!locals.user) redirect(302, '/login');
 
 	const userId = locals.user.id;
-	const today = new Date().toISOString().slice(0, 10);
+	const user = await db.select({ preferences: users.preferences }).from(users).where(eq(users.id, userId)).get();
+	const timezone = user?.preferences?.timezone;
+	const today = new Intl.DateTimeFormat('en-CA', { timeZone: timezone ?? 'UTC' }).format(new Date());
 
 	const [todayPrescriptions, todayRecovery, recentSets] = await Promise.all([
 		db

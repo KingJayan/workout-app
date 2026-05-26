@@ -5,6 +5,7 @@ import { lucia } from '$lib/auth.js';
 import { bunPassword } from '$lib/password.js';
 import { eq } from 'drizzle-orm';
 import { encodeHexLowerCase } from '@oslojs/encoding';
+import { checkRateLimit } from '$lib/rateLimit.js';
 import type { RequestHandler } from './$types';
 
 function generateId(): string {
@@ -12,7 +13,8 @@ function generateId(): string {
 	return encodeHexLowerCase(bytes);
 }
 
-export const POST: RequestHandler = async ({ request, cookies }) => {
+export const POST: RequestHandler = async ({ request, cookies, getClientAddress }) => {
+	if (!checkRateLimit(getClientAddress(), 5)) return error(429, 'too many requests');
 	let body: { email: string; password: string; displayName?: string };
 
 	try {
