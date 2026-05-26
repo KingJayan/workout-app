@@ -9,6 +9,10 @@ vi.mock('$db/client.js', () => ({
 }));
 
 vi.mock('$db/schema.js', () => ({
+	users: {
+		id: {},
+		preferences: {}
+	},
 	prescriptions: {},
 	gearProfiles: {}
 }));
@@ -25,11 +29,13 @@ import { db } from '$db/client.js';
 // helpers
 // ---------------------------------------------------------------------------
 
-function makeSelectChain(returnValue: unknown) {
+function makeSelectChain(...returnValues: unknown[]) {
+	const values = returnValues.length > 0 ? returnValues : [undefined];
+	let callCount = 0;
 	const chain = {
 		from: vi.fn().mockReturnThis(),
 		where: vi.fn().mockReturnThis(),
-		get: vi.fn().mockResolvedValue(returnValue)
+		get: vi.fn().mockImplementation(() => Promise.resolve(values[Math.min(callCount++, values.length - 1)]))
 	};
 	(db.select as ReturnType<typeof vi.fn>).mockReturnValue(chain);
 	return chain;
@@ -176,19 +182,11 @@ describe('sleep trigger', () => {
 	});
 
 	it('triggers at 4h sleep (2h deficit → 20% drop, swaps compounds)', async () => {
-		makeSelectChain({ ...basePrescription, gearProfileId: 1 });
-		// second select call returns gear
-		const mockSelect = db.select as ReturnType<typeof vi.fn>;
-		let callCount = 0;
-		mockSelect.mockImplementation(() => {
-			callCount++;
-			const returnVal = callCount === 1 ? { ...basePrescription, gearProfileId: 1 } : baseGear;
-			return {
-				from: vi.fn().mockReturnThis(),
-				where: vi.fn().mockReturnThis(),
-				get: vi.fn().mockResolvedValue(returnVal)
-			};
-		});
+		makeSelectChain(
+			{ preferences: {} },
+			{ ...basePrescription, gearProfileId: 1 },
+			{ ...baseGear, hasMachines: true, hasDumbbells: false }
+		);
 		makeUpdateChain();
 
 		const result = await rewritePrescription({
@@ -239,17 +237,7 @@ describe('readiness trigger', () => {
 	});
 
 	it('swaps compounds when readiness ≤ 3', async () => {
-		const mockSelect = db.select as ReturnType<typeof vi.fn>;
-		let callCount = 0;
-		mockSelect.mockImplementation(() => {
-			callCount++;
-			const returnVal = callCount === 1 ? { ...basePrescription, gearProfileId: 1 } : baseGear;
-			return {
-				from: vi.fn().mockReturnThis(),
-				where: vi.fn().mockReturnThis(),
-				get: vi.fn().mockResolvedValue(returnVal)
-			};
-		});
+		makeSelectChain({ preferences: {} }, { ...basePrescription, gearProfileId: 1 }, baseGear);
 		makeUpdateChain();
 
 		const result = await rewritePrescription({
@@ -383,16 +371,12 @@ describe('multi-trigger merge behavior', () => {
 
 describe('gear-aware compound swap', () => {
 	it('swaps to machine alternative when hasMachines is true', async () => {
-		const mockSelect = db.select as ReturnType<typeof vi.fn>;
-		let call = 0;
-		mockSelect.mockImplementation(() => {
-			call++;
-			const val = call === 1
-				? { ...basePrescription, gearProfileId: 1 }
-				: { ...baseGear, hasMachines: true, hasDumbbells: false };
-			return { from: vi.fn().mockReturnThis(), where: vi.fn().mockReturnThis(), get: vi.fn().mockResolvedValue(val) };
-		});
-		(db.update as ReturnType<typeof vi.fn>).mockReturnValue({ set: vi.fn().mockReturnThis(), where: vi.fn().mockResolvedValue(undefined) });
+		makeSelectChain(
+			{ preferences: {} },
+			{ ...basePrescription, gearProfileId: 1 },
+			{ ...baseGear, hasMachines: true, hasDumbbells: false }
+		);
+		makeUpdateChain();
 
 		const result = await rewritePrescription({
 			userId: 'u1',
@@ -404,16 +388,12 @@ describe('gear-aware compound swap', () => {
 	});
 
 	it('does not swap compound when no gear available for alternatives', async () => {
-		const mockSelect = db.select as ReturnType<typeof vi.fn>;
-		let call = 0;
-		mockSelect.mockImplementation(() => {
-			call++;
-			const val = call === 1
-				? { ...basePrescription, gearProfileId: 1 }
-				: { ...baseGear, hasMachines: false, hasDumbbells: false, hasCable: false };
-			return { from: vi.fn().mockReturnThis(), where: vi.fn().mockReturnThis(), get: vi.fn().mockResolvedValue(val) };
-		});
-		(db.update as ReturnType<typeof vi.fn>).mockReturnValue({ set: vi.fn().mockReturnThis(), where: vi.fn().mockResolvedValue(undefined) });
+		makeSelectChain(
+			{ preferences: {} },
+			{ ...basePrescription, gearProfileId: 1 },
+			{ ...baseGear, hasMachines: false, hasDumbbells: false, hasCable: false }
+		);
+		makeUpdateChain();
 
 		const result = await rewritePrescription({
 			userId: 'u1',
@@ -438,14 +418,8 @@ describe('gear-aware compound swap', () => {
 				]
 			}
 		};
-		const mockSelect = db.select as ReturnType<typeof vi.fn>;
-		let call = 0;
-		mockSelect.mockImplementation(() => {
-			call++;
-			const val = call === 1 ? onlyIsolatedPrescription : baseGear;
-			return { from: vi.fn().mockReturnThis(), where: vi.fn().mockReturnThis(), get: vi.fn().mockResolvedValue(val) };
-		});
-		(db.update as ReturnType<typeof vi.fn>).mockReturnValue({ set: vi.fn().mockReturnThis(), where: vi.fn().mockResolvedValue(undefined) });
+		makeSelectChain({ preferences: {} }, onlyIsolatedPrescription, baseGear);
+		makeUpdateChain();
 
 		const result = await rewritePrescription({
 			userId: 'u1',
