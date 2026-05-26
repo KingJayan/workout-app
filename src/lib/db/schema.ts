@@ -74,6 +74,53 @@ export const gearProfiles = sqliteTable('gear_profiles', {
 		.default(sql`(unixepoch() * 1000)`)
 });
 
+export const googleAccounts = sqliteTable(
+	'google_accounts',
+	{
+		id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
+		userId: text('user_id')
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		googleUserId: text('google_user_id').notNull(),
+		email: text('email').notNull(),
+		accessToken: text('access_token').notNull(),
+		refreshToken: text('refresh_token').notNull(),
+		tokenExpiresAt: integer('token_expires_at', { mode: 'timestamp_ms' }).notNull(),
+		scopes: text('scopes').notNull(),
+		lastSyncedAt: integer('last_synced_at', { mode: 'timestamp_ms' }),
+		syncError: text('sync_error'),
+		syncErrorAt: integer('sync_error_at', { mode: 'timestamp_ms' }),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(unixepoch() * 1000)`),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(unixepoch() * 1000)`)
+	},
+	(t) => [uniqueIndex('google_accounts_user_uidx').on(t.userId)]
+);
+
+export const googleCalendars = sqliteTable(
+	'google_calendars',
+	{
+		id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
+		userId: text('user_id')
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		googleAccountId: integer('google_account_id')
+			.notNull()
+			.references(() => googleAccounts.id, { onDelete: 'cascade' }),
+		calendarId: text('calendar_id').notNull(),
+		summary: text('summary'),
+		syncToken: text('sync_token'),
+		enabled: integer('enabled', { mode: 'boolean' }).notNull().default(true),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(unixepoch() * 1000)`)
+	},
+	(t) => [uniqueIndex('google_calendars_user_cal_uidx').on(t.userId, t.calendarId)]
+);
+
 export const eventsCalendar = sqliteTable('events_calendar', {
 	id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
 	userId: text('user_id')
@@ -82,10 +129,15 @@ export const eventsCalendar = sqliteTable('events_calendar', {
 	startsAt: text('starts_at').notNull(),
 	durationMinutes: integer('duration_minutes').notNull(),
 	sport: text('sport').notNull(),
-	// 1–10 expected
 	intensityRating: integer('intensity_rating'),
 	label: text('label'),
 	notes: text('notes'),
+	source: text('source', { enum: ['local', 'google'] }).notNull().default('local'),
+	externalId: text('external_id'),
+	googleCalendarId: text('google_calendar_id'),
+	googleUpdatedAt: text('google_updated_at'),
+	syncStatus: text('sync_status', { enum: ['synced', 'pending', 'conflict'] }),
+	affectsTraining: integer('affects_training', { mode: 'boolean' }).notNull().default(true),
 	createdAt: integer('created_at', { mode: 'timestamp_ms' })
 		.notNull()
 		.default(sql`(unixepoch() * 1000)`)
@@ -193,6 +245,10 @@ export type GearProfile = typeof gearProfiles.$inferSelect;
 export type NewGearProfile = typeof gearProfiles.$inferInsert;
 export type EventCalendar = typeof eventsCalendar.$inferSelect;
 export type NewEventCalendar = typeof eventsCalendar.$inferInsert;
+export type GoogleAccount = typeof googleAccounts.$inferSelect;
+export type NewGoogleAccount = typeof googleAccounts.$inferInsert;
+export type GoogleCalendar = typeof googleCalendars.$inferSelect;
+export type NewGoogleCalendar = typeof googleCalendars.$inferInsert;
 export type Prescription = typeof prescriptions.$inferSelect;
 export type NewPrescription = typeof prescriptions.$inferInsert;
 export type Workout = typeof workouts.$inferSelect;

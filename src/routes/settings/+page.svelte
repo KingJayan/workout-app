@@ -194,6 +194,43 @@
 		</div>
 	</section>
 
+	<!-- Google Calendar -->
+	<section class="section">
+		<div class="section-header">
+			<span class="section-title">Google Calendar</span>
+		</div>
+		<div class="card form-card account-row">
+			{#if data.googleAccount}
+				<div>
+					<p class="account-email">{data.googleAccount.email}</p>
+					{#if data.googleAccount.lastSyncedAt}
+						<p class="account-since font-data">last synced {new Date(data.googleAccount.lastSyncedAt).toLocaleString()}</p>
+					{/if}
+					{#if data.googleAccount.syncError}
+						<p class="account-since font-data">{data.googleAccount.syncError}</p>
+					{/if}
+				</div>
+				<div style="display:flex;gap:0.5rem;align-items:center;">
+					<a href="/settings/google-calendars" class="btn-base btn-ghost">Manage</a>
+					<button
+						type="button"
+						class="btn-base btn-ghost"
+						onclick={async () => {
+							await fetch('/api/auth/google/disconnect', { method: 'POST' });
+							location.reload();
+						}}
+					>Disconnect</button>
+				</div>
+			{:else}
+				<p class="account-email" style="color:var(--fg-muted);font-size:0.8125rem;">Not connected</p>
+				<a href="/api/auth/google" class="btn-base btn-ghost">Connect Google Calendar</a>
+			{/if}
+		</div>
+		{#if new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '').get('google') === 'connected'}
+			<p class="form-success" style="margin-top:0.5rem;">Google Calendar connected.</p>
+		{/if}
+	</section>
+
 	<!-- Account -->
 	<section class="section">
 		<div class="section-header">

@@ -50,6 +50,7 @@
 		"@libsql/client": "^0.17.2",
 		"@oslojs/crypto": "^1.0.1",
 		"@oslojs/encoding": "^1.1.0",
+		"arctic": "^3.7.0",
 		"dexie": "^4.4.2",
 		"drizzle-kit": "^0.31.10",
 		"drizzle-orm": "^0.45.2",

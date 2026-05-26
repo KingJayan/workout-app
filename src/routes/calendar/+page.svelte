@@ -172,7 +172,10 @@
 								<td class="font-data muted">{fmtTime(ev.startsAt)}</td>
 								<td>
 									<span class="sport-name">{ev.sport}</span>
-									{#if ev.label}
+									{#if ev.source === 'google'}
+										<span class="source-badge">gcal</span>
+									{/if}
+									{#if ev.label && ev.label !== ev.sport}
 										<span class="ev-label">{ev.label}</span>
 									{/if}
 								</td>
@@ -308,6 +311,18 @@
 		display: block;
 		font-size: 0.6875rem;
 		color: var(--fg-muted);
+	}
+
+	.source-badge {
+		display: inline-block;
+		font-size: 0.5625rem;
+		font-family: var(--font-mono);
+		background: var(--muted);
+		color: var(--fg-muted);
+		border-radius: 2px;
+		padding: 0 3px;
+		margin-left: 0.25rem;
+		vertical-align: middle;
 	}
 
 	.muted {

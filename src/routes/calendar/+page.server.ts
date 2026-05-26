@@ -50,7 +50,9 @@ export const actions: Actions = {
 			sport,
 			intensityRating: intensity,
 			label: typeof label === 'string' && label ? label : null,
-			notes: typeof notes === 'string' && notes ? notes : null
+			notes: typeof notes === 'string' && notes ? notes : null,
+			source: 'local',
+			affectsTraining: true
 		});
 
 		return { success: true };

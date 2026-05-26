@@ -1,18 +1,20 @@
 import { redirect, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { db } from '$db/client.js';
-import { gearProfiles, users } from '$db/schema.js';
+import { gearProfiles, users, googleAccounts } from '$db/schema.js';
 import { eq } from 'drizzle-orm';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) redirect(302, '/login');
 
-	const [gear, user] = await Promise.all([
+	const [gear, user, googleAccount] = await Promise.all([
 		db.select().from(gearProfiles).where(eq(gearProfiles.userId, locals.user.id)).all(),
-		db.select().from(users).where(eq(users.id, locals.user.id)).get()
+		db.select().from(users).where(eq(users.id, locals.user.id)).get(),
+		db.select({ id: googleAccounts.id, email: googleAccounts.email, lastSyncedAt: googleAccounts.lastSyncedAt, syncError: googleAccounts.syncError })
+			.from(googleAccounts).where(eq(googleAccounts.userId, locals.user.id)).get()
 	]);
 
-	return { gear, user: user ?? null };
+	return { gear, user: user ?? null, googleAccount: googleAccount ?? null };
 };
 
 export const actions: Actions = {
