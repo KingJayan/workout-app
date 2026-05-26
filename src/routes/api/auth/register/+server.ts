@@ -27,6 +27,8 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 		return error(400, 'email and password required');
 	}
 
+	if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) return error(400, 'invalid email');
+
 	if (body.password.length < 8) return error(400, 'password must be at least 8 characters');
 
 	const existing = await db.select().from(users).where(eq(users.email, body.email)).get();

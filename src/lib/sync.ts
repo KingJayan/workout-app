@@ -14,6 +14,7 @@ export type SyncResult = {
 let syncInFlight = false;
 
 export async function syncNow(): Promise<SyncResult> {
+	if (typeof window === 'undefined') return { workoutsSynced: 0, setsSynced: 0, errors: [] };
 	if (syncInFlight) return { workoutsSynced: 0, setsSynced: 0, errors: [] };
 	syncInFlight = true;
 

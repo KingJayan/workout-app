@@ -144,5 +144,9 @@ export function parseSetInput(template: string, raw: string): ParseResult {
 		}
 	}
 
+	const hasValue = result.sets !== null || result.reps !== null || result.loadKg !== null ||
+		result.rpe !== null || result.durationSeconds !== null || result.distanceMeters !== null;
+	if (!hasValue) return { ok: false, error: 'no fields parsed' };
+
 	return { ok: true, data: result };
 }
