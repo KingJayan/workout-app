@@ -15,6 +15,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	return {
 		today,
+		userId: locals.user.id,
 		parserTemplate: user?.parserTemplate ?? '[sets]x[reps] [weight] @[rpe]'
 	};
 };

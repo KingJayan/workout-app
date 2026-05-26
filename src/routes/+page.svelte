@@ -65,7 +65,7 @@
 				await localDb.prescriptions.bulkPut(
 					d.prescriptions.map((rx: RxItem) => ({
 						id: rx.id,
-						userId: '',
+						userId: data.userId,
 						date: data.today,
 						gearProfileId: null,
 						algorithmVersion: '1.0',
@@ -78,7 +78,7 @@
 			if (d.recovery) {
 				await localDb.recovery.put({
 					id: d.recovery.id,
-					userId: '',
+					userId: data.userId,
 					date: data.today,
 					sleepHours: d.recovery.sleepHours,
 					subjectiveReadiness: d.recovery.subjectiveReadiness,
@@ -115,20 +115,19 @@
 					workoutId: s.workoutId
 				}));
 
-			// compute volume from local sets in last 7 days
 			const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
 				.toISOString()
 				.slice(0, 10);
+			const weekWorkouts = localWorkouts.filter((w) => w.startedAt >= weekAgo);
+			const weekWorkoutIds = new Set(weekWorkouts.map((w) => w.id));
 			const weekSets = await localDb.sets
-				.filter((s) => s.loggedAt >= weekAgo)
+				.filter((s) => weekWorkoutIds.has(s.workoutId))
 				.toArray();
 			const volumeLoad = weekSets.reduce(
 				(acc, s) => acc + (s.loadKg ?? 0) * (s.reps ?? 0),
 				0
 			);
-			const sessionCount = new Set(
-				localWorkouts.filter((w) => w.startedAt >= weekAgo).map((w) => w.id)
-			).size;
+			const sessionCount = weekWorkoutIds.size;
 
 			stats = {
 				volumeLoad,
@@ -181,7 +180,7 @@
 				workoutId = crypto.randomUUID();
 				await localDb.workouts.add({
 					id: workoutId,
-					userId: '',
+					userId: data.userId,
 					prescriptionId: null,
 					gearProfileId: null,
 					startedAt: new Date().toISOString(),
@@ -200,7 +199,7 @@
 		const set = {
 			id: crypto.randomUUID(),
 			workoutId,
-			userId: '',
+			userId: data.userId,
 			exerciseId: name.toLowerCase().replace(/\s+/g, '-'),
 			exerciseName: name,
 			setIndex: setCount,

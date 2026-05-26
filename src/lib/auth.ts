@@ -67,6 +67,8 @@ const adapter: Adapter = {
 	}
 };
 
+export const deleteExpiredSessions = () => adapter.deleteExpiredSessions();
+
 export const lucia = new Lucia(adapter, {
 	sessionCookie: {
 		attributes: {

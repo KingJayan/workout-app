@@ -1,7 +1,8 @@
-import { lucia } from '$lib/auth.js';
+import { lucia, deleteExpiredSessions } from '$lib/auth.js';
 import type { Handle } from '@sveltejs/kit';
 
 export const handle: Handle = async ({ event, resolve }) => {
+	if (Math.random() < 0.01) deleteExpiredSessions().catch(() => {});
 	const sessionId = event.cookies.get(lucia.sessionCookieName);
 
 	if (!sessionId) {
