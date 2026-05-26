@@ -3,12 +3,10 @@ import type { Actions, PageServerLoad } from './$types';
 import { db } from '$db/client.js';
 import { users } from '$db/schema.js';
 import { lucia } from '$lib/auth.js';
+import { bunPassword } from '$lib/password.js';
 import { eq } from 'drizzle-orm';
-import { hash as argon2hash, verify as argon2verify } from '@node-rs/argon2';
 import { sha256 } from '@oslojs/crypto/sha2';
 import { encodeHexLowerCase } from '@oslojs/encoding';
-
-const ARGON2_OPTIONS = { memoryCost: 19456, timeCost: 2, outputLen: 32, parallelism: 1 } as const;
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (locals.user) redirect(302, '/');
@@ -32,13 +30,13 @@ export const actions: Actions = {
 		let valid = false;
 
 		if (stored.startsWith('$argon2')) {
-			valid = await argon2verify(stored, password, ARGON2_OPTIONS);
+			valid = await bunPassword.verify(password, stored);
 		} else {
-			// legacy SHA256 — verify then rehash to argon2id on next login
+			// legacy SHA256 — verify then rehash with Bun.password on next login
 			const sha = encodeHexLowerCase(sha256(new TextEncoder().encode(password)));
 			if (sha === stored) {
 				valid = true;
-				const newHash = await argon2hash(password, ARGON2_OPTIONS);
+				const newHash = await bunPassword.hash(password);
 				await db.update(users).set({ authProviderId: newHash }).where(eq(users.id, user.id));
 			}
 		}
@@ -71,7 +69,7 @@ export const actions: Actions = {
 		const existing = await db.select({ id: users.id }).from(users).where(eq(users.email, email)).get();
 		if (existing) return fail(409, { error: 'An account with that email already exists.' });
 
-		const hash = await argon2hash(password, ARGON2_OPTIONS);
+		const hash = await bunPassword.hash(password);
 		const id = crypto.randomUUID();
 
 		await db.insert(users).values({

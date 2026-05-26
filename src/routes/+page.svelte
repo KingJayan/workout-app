@@ -9,7 +9,6 @@
 
 	let { data }: { data: PageData } = $props();
 
-	// parser state
 	let parserInput = $state('');
 	let parsePreview = $derived(
 		parserInput.trim()
@@ -17,7 +16,6 @@
 			: null
 	);
 
-	// dashboard data — hydrated by onMount fetch or Dexie fallback
 	type RecentSet = {
 		id: string;
 		exerciseName: string;
@@ -60,7 +58,7 @@
 			stats = d.stats;
 			dataSource = 'server';
 
-			// cache prescriptions + recovery to dexie for offline use
+			// cache prescriptions
 			if (d.prescriptions.length > 0) {
 				await localDb.prescriptions.bulkPut(
 					d.prescriptions.map((rx: RxItem) => ({
@@ -86,7 +84,6 @@
 				});
 			}
 		} catch {
-			// offline — read from dexie
 			const [localRx, localRecovery, localSets, localWorkouts] = await Promise.all([
 				localDb.prescriptions.where('date').equals(data.today).toArray(),
 				localDb.recovery.where('date').equals(data.today).first(),

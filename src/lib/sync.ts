@@ -58,7 +58,7 @@ export async function syncNow(): Promise<SyncResult> {
 export function registerOnlineSync(): () => void {
 	const handler = () => { syncNow(); };
 	window.addEventListener('online', handler);
-	// attempt sync immediately in case we're already online with pending records
+
 	if (navigator.onLine) syncNow();
 	return () => window.removeEventListener('online', handler);
 }

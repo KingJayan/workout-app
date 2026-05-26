@@ -11,7 +11,6 @@ export type ParsedSet = {
 export type ParseError = { ok: false; error: string };
 export type ParseResult = { ok: true; data: ParsedSet } | ParseError;
 
-// recognized token keys and how to extract them
 const TOKEN_PATTERNS: Record<string, RegExp> = {
 	sets: /^(\d+)$/,
 	reps: /^(\d+)$/,
@@ -78,18 +77,14 @@ function splitInputByTemplate(template: string, input: string): string[] {
 		// replace [token] with a permissive capture group; whitespace around separators is optional
 		.replace(/\[(\w+)\]/g, '([^\\s\\[\\]]+|\\S+?)');
 
-	// allow optional whitespace around separator literals
 	const relaxed = escaped.replace(/([^()?+*\\])\s+([^()?+*\\])/g, '$1\\s*$2');
 
 	try {
 		const re = new RegExp('^\\s*' + relaxed + '\\s*$', 'i');
 		const m = input.trim().match(re);
 		if (m) return m.slice(1);
-	} catch {
-		// fall through to whitespace split
-	}
+	} catch {}
 
-	// fallback: plain whitespace tokenization
 	return input.trim().split(/\s+/);
 }
 
@@ -100,7 +95,6 @@ export function parseSetInput(template: string, raw: string): ParseResult {
 	const tokenNames = extractTemplateTokens(template);
 	if (tokenNames.length === 0) return { ok: false, error: 'template has no tokens' };
 
-	// detect set type keywords anywhere in the raw input before splitting
 	const lowerRaw = raw.toLowerCase();
 	let setType: ParsedSet['setType'] = 'working';
 	for (const [kw, type] of Object.entries(SET_TYPE_KEYWORDS)) {

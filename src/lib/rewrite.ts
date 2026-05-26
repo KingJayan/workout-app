@@ -9,7 +9,7 @@ export type RecoverySnapshot = {
 };
 
 export type UpcomingEvent = {
-	startsAt: string; // ISO datetime
+	startsAt: string; // ISO dt
 	intensityRating: number | null; // 1–10
 	sport: string;
 };
@@ -29,7 +29,6 @@ export type RewriteResult = {
 	noAlternativeFound: boolean;
 };
 
-// compound barbell movements that get swapped under fatigue
 const COMPOUND_BARBELL: ReadonlySet<string> = new Set([
 	'squat',
 	'back squat',
@@ -46,7 +45,6 @@ const COMPOUND_BARBELL: ReadonlySet<string> = new Set([
 	'snatch'
 ]);
 
-// fallback isolated alternatives by muscle-group keyword, keyed to gear availability
 type AlternativeMap = {
 	requires: keyof GearProfile;
 	name: string;
@@ -111,12 +109,11 @@ const COMPOUND_ALTERNATIVES: Record<string, AlternativeMap[]> = {
 
 type FatigueTrigger = {
 	triggered: boolean;
-	setDropPct: number; // 0–1 fraction of working sets to drop
+	setDropPct: number;
 	swapCompounds: boolean;
 	reason: string | null;
 };
 
-// rules engine — add new rules here without touching the mutation logic below
 function evaluateTriggers(
 	recovery: RecoverySnapshot,
 	upcomingEvents: UpcomingEvent[],
@@ -168,7 +165,6 @@ function evaluateTriggers(
 		return { triggered: false, setDropPct: 0, swapCompounds: false, reason: null };
 	}
 
-	// merge: take max set drop, OR swap flags, join reasons
 	const setDropPct = Math.min(Math.max(...triggers.map((t) => t.setDropPct)), 0.5);
 	const swapCompounds = triggers.some((t) => t.swapCompounds);
 	const reason = triggers.map((t) => t.reason).join('; ');
@@ -200,12 +196,10 @@ function applyRewrite(
 		let { sets, name } = ex;
 		const isCompound = COMPOUND_BARBELL.has(name.toLowerCase().trim());
 
-		// drop working sets proportionally (minimum 1 set preserved)
 		const drop = Math.round(sets * trigger.setDropPct);
 		const newSets = Math.max(1, sets - drop);
 		setsDropped += sets - newSets;
 
-		// swap compound → isolated if gear permits
 		let newName = name;
 		if (trigger.swapCompounds && isCompound) {
 			if (gear) {

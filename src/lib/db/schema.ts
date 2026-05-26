@@ -82,7 +82,7 @@ export const eventsCalendar = sqliteTable('events_calendar', {
 	startsAt: text('starts_at').notNull(),
 	durationMinutes: integer('duration_minutes').notNull(),
 	sport: text('sport').notNull(),
-	// 1–10 expected exertion
+	// 1–10 expected
 	intensityRating: integer('intensity_rating'),
 	label: text('label'),
 	notes: text('notes'),

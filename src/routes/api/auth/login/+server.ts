@@ -2,13 +2,11 @@ import { json, error } from '@sveltejs/kit';
 import { db } from '$db/client.js';
 import { users } from '$db/schema.js';
 import { lucia } from '$lib/auth.js';
+import { bunPassword } from '$lib/password.js';
 import { eq } from 'drizzle-orm';
-import { hash as argon2hash, verify as argon2verify } from '@node-rs/argon2';
 import { sha256 } from '@oslojs/crypto/sha2';
 import { encodeHexLowerCase } from '@oslojs/encoding';
 import type { RequestHandler } from './$types';
-
-const ARGON2_OPTIONS = { memoryCost: 19456, timeCost: 2, outputLen: 32, parallelism: 1 } as const;
 
 export const POST: RequestHandler = async ({ request, cookies }) => {
 	let body: { email: string; password: string };
@@ -30,13 +28,13 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 	let valid = false;
 
 	if (stored.startsWith('$argon2')) {
-		valid = await argon2verify(stored, body.password, ARGON2_OPTIONS);
+		valid = await bunPassword.verify(body.password, stored);
 	} else {
-		// legacy SHA256 path — verify then rehash to argon2id
+		// legacy SHA256 path — verify then rehash w/ Bun.password on next login
 		const sha = encodeHexLowerCase(sha256(new TextEncoder().encode(body.password)));
 		if (sha === stored) {
 			valid = true;
-			const newHash = await argon2hash(body.password, ARGON2_OPTIONS);
+			const newHash = await bunPassword.hash(body.password);
 			await db.update(users).set({ authProviderId: newHash }).where(eq(users.id, user.id));
 		}
 	}
