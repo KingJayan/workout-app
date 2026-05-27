@@ -111,14 +111,13 @@ read testing + architecture docs [here](https://github.com/KingJayan/workout-app
 
 ## notes
 
-**parser design** - template drives tokenization. the parser is user-configurable per-account (`users.parser_template`) without code changes
+**parser design** - template drives tokenization, the parser is user-configurable per-account (`users.parser_template`) without code changes
 
-**rewrite algorithm** - rules are additive: multiple triggers merge by taking `max(setDropPct)` (capped at 50%) and `OR`-ing swap flags. no external calls
+**rewrite algorithm** - rules are additive: multiple triggers merge by taking `max(setDropPct)` (capped at 50%) and `OR`-ing swap flags.
 
 **offline-first** - writes go to dexie indexed-db first (`synced: false`), then `/api/sync` upserts them to turso on next `online` event. server-rendered pages still query turso directly (no local read path yet)
 
-**auth** - lucia v3 with a custom drizzle adapter
+**auth** - lucia v3 with a custom drizzle adapter.
 
-**deps** - `--legacy-peer-deps` required at install time due to `lucide-svelte@1.x` peer range vs. svelte 5 minor version
 
 <div align="center"><p>built with :) by jayan</p></div>
