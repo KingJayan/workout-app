@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { integer, real, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import { index, integer, real, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
 export const users = sqliteTable(
 	'users',
@@ -160,7 +160,9 @@ export const prescriptions = sqliteTable('prescriptions', {
 	generatedAt: integer('generated_at', { mode: 'timestamp_ms' })
 		.notNull()
 		.default(sql`(unixepoch() * 1000)`)
-});
+},
+	(t) => [index('prescriptions_user_date_idx').on(t.userId, t.date)]
+);
 
 export type PrescriptionExercise = {
 	exerciseId: string;

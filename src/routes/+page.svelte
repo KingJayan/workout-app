@@ -164,7 +164,7 @@
 	}
 
 	function fmtDate(iso: string): string {
-		return iso.slice(11, 16);
+		return new Date(iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false });
 	}
 
 	async function submitSet(e: Event) {

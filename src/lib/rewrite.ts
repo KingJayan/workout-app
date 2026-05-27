@@ -156,7 +156,7 @@ function evaluateTriggers(
 				triggered: true,
 				setDropPct: 0.25,
 				swapCompounds: true,
-				reason: `${ev.sport} event (intensity ${ev.intensityRating}/10) within 48h`
+				reason: `${ev.sport} event (intensity ${ev.intensityRating}/10) within ${thresholds.eventWindowHours ?? 48}h`
 			});
 		}
 	}

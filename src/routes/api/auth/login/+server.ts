@@ -32,12 +32,12 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 	if (stored.startsWith('$argon2')) {
 		valid = await bunPassword.verify(body.password, stored);
 	} else {
-		// legacy SHA256 path — verify then rehash w/ Bun.password on next login
 		const sha = encodeHexLowerCase(sha256(new TextEncoder().encode(body.password)));
 		if (sha === stored) {
 			valid = true;
 			const newHash = await bunPassword.hash(body.password);
 			await db.update(users).set({ authProviderId: newHash }).where(eq(users.id, user.id));
+			console.warn(`[auth] legacy SHA256 login migrated: userId=${user.id}`);
 		}
 	}
 
