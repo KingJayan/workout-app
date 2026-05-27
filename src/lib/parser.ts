@@ -74,10 +74,11 @@ function splitInputByTemplate(template: string, input: string): string[] {
 	// build a regex from the template: each [token] becomes a capture group
 	const escaped = template
 		.replace(/[.*+?^${}()|[\]\\]/g, (c) => (c === '[' || c === ']' ? c : '\\' + c))
-		// replace [token] with a permissive capture group; whitespace around separators is optional
-		.replace(/\[(\w+)\]/g, '([^\\s\\[\\]]+|\\S+?)');
+		.replace(/\[(\w+)\]/g, '([^\\s\\[\\]]+)?');
 
-	const relaxed = escaped.replace(/([^()?+*\\])\s+([^()?+*\\])/g, '$1\\s*$2');
+	const relaxed = escaped
+		.replace(/(\)\??)\s+\(/g, '$1\\s*(')
+		.replace(/([^()?+*\\])\s+([^()?+*\\])/g, '$1\\s*$2');
 
 	try {
 		const re = new RegExp('^\\s*' + relaxed + '\\s*$', 'i');
@@ -97,14 +98,18 @@ export function parseSetInput(template: string, raw: string): ParseResult {
 
 	const lowerRaw = raw.toLowerCase();
 	let setType: ParsedSet['setType'] = 'working';
+	let cleanRaw = raw;
 	for (const [kw, type] of Object.entries(SET_TYPE_KEYWORDS)) {
 		if (new RegExp(`\\b${kw}\\b`).test(lowerRaw)) {
 			setType = type;
+			if (!new RegExp(`\\b${kw}\\b`, 'i').test(template)) {
+				cleanRaw = raw.replace(new RegExp(`\\b${kw}\\b`, 'i'), '').trim();
+			}
 			break;
 		}
 	}
 
-	const parts = splitInputByTemplate(template, raw);
+	const parts = splitInputByTemplate(template, cleanRaw);
 
 	const result: ParsedSet = {
 		sets: null,
