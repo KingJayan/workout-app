@@ -175,8 +175,8 @@
 
 	.form-error {
 		font-size: 0.75rem;
-		color: var(--fg-muted);
-		border: 1px solid var(--border);
+		color: var(--fg);
+		border: 1px solid var(--fg);
 		border-radius: 2px;
 		padding: 0.375rem 0.5rem;
 		margin: 0 0 1rem;

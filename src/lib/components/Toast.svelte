@@ -35,8 +35,9 @@
 	}
 
 	.toast-error {
-		border-color: var(--fg-muted);
-		color: var(--fg);
+		border-color: var(--fg);
+		background-color: var(--fg);
+		color: var(--accent-fg);
 	}
 
 	@keyframes slide-in {
