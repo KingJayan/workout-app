@@ -102,20 +102,6 @@
 		}
 	}
 
-	.page-header {
-		display: flex;
-		align-items: baseline;
-		justify-content: space-between;
-		margin-bottom: 1.25rem;
-	}
-
-	.page-title {
-		font-size: 0.9375rem;
-		font-weight: 600;
-		letter-spacing: -0.01em;
-		margin: 0;
-	}
-
 	.page-sub {
 		font-size: 0.75rem;
 		color: var(--fg-muted);
@@ -159,20 +145,6 @@
 
 	.section {
 		margin-bottom: 1.25rem;
-	}
-
-	.section-header {
-		display: flex;
-		align-items: center;
-		margin-bottom: 0.5rem;
-	}
-
-	.section-title {
-		font-size: 0.75rem;
-		font-weight: 500;
-		letter-spacing: 0.06em;
-		text-transform: uppercase;
-		color: var(--fg-muted);
 	}
 
 	.chart-card {

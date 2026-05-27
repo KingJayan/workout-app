@@ -80,11 +80,8 @@
 
 <style>
 	.page-shell { padding: 1.25rem 1rem; max-width: 640px; }
-	.page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
-	.page-title { font-size: 0.9375rem; font-weight: 600; letter-spacing: -0.01em; margin: 0; }
+	.page-header { align-items: center; }
 	.section { margin-bottom: 1.5rem; }
-	.section-header { margin-bottom: 0.5rem; }
-	.section-title { font-size: 0.75rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg-muted); }
 	.card { border: 1px solid var(--border); border-radius: 4px; }
 	.info-card { padding: 0.875rem; display: flex; flex-direction: column; gap: 0.375rem; }
 	.account-email { font-size: 0.8125rem; }

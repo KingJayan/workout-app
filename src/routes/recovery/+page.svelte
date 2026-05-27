@@ -160,20 +160,6 @@
 		}
 	}
 
-	.page-header {
-		display: flex;
-		align-items: baseline;
-		justify-content: space-between;
-		margin-bottom: 1.25rem;
-	}
-
-	.page-title {
-		font-size: 0.9375rem;
-		font-weight: 600;
-		letter-spacing: -0.01em;
-		margin: 0;
-	}
-
 	.page-date {
 		font-size: 0.75rem;
 		color: var(--fg-muted);
@@ -183,40 +169,8 @@
 		margin-bottom: 1.25rem;
 	}
 
-	.section-header {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		margin-bottom: 0.5rem;
-	}
-
-	.section-title {
-		font-size: 0.75rem;
-		font-weight: 500;
-		letter-spacing: 0.06em;
-		text-transform: uppercase;
-		color: var(--fg-muted);
-	}
-
 	.form-card {
 		padding: 0.875rem;
-	}
-
-	.form-error {
-		font-size: 0.75rem;
-		color: var(--fg);
-		border: 1px solid var(--fg);
-		border-radius: 2px;
-		padding: 0.375rem 0.5rem;
-		margin: 0 0 0.75rem;
-		font-family: var(--font-mono);
-	}
-
-	.form-success {
-		font-size: 0.75rem;
-		color: var(--fg-muted);
-		margin: 0 0 0.75rem;
-		font-family: var(--font-mono);
 	}
 
 	.form-row {
