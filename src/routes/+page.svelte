@@ -638,9 +638,10 @@
 	}
 
 	.rx-rewrite-btn {
-		font-size: 0.6875rem;
-		padding: 0.125rem 0.375rem;
-		color: var(--fg-muted);
+		font-size: 0.75rem;
+		padding: 0.25rem 0.5rem;
+		border-color: var(--fg);
+		color: var(--fg);
 	}
 
 	.rx-exercises {

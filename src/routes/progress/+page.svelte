@@ -53,7 +53,8 @@
 			<div class="card chart-card">
 				<div class="bar-chart">
 					{#each data.days as d}
-						<div class="bar-col" title="{fmtDate(d.date)} — {fmt(d.volumeLoad)} kg·reps">
+						<div class="bar-col">
+							<span class="bar-value font-data">{d.volumeLoad > 0 ? fmt(d.volumeLoad) : ''}</span>
 							<div class="bar" style="height: {Math.max(2, (d.volumeLoad / maxVolume) * 100)}%"></div>
 							<span class="bar-label font-data">{fmtDate(d.date)}</span>
 						</div>
@@ -156,7 +157,7 @@
 		display: flex;
 		align-items: flex-end;
 		gap: 3px;
-		height: 80px;
+		height: 120px;
 		min-width: max-content;
 	}
 
@@ -164,9 +165,15 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 4px;
+		gap: 3px;
 		height: 100%;
 		justify-content: flex-end;
+	}
+
+	.bar-value {
+		font-size: 0.5rem;
+		color: var(--fg-muted);
+		min-height: 0.75rem;
 	}
 
 	.bar {

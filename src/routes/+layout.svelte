@@ -73,7 +73,7 @@
 <div class="layout">
 	<aside class="sidebar">
 		<div class="sidebar-top">
-			<span class="sidebar-logo">W</span>
+			<span class="sidebar-logo">WK</span>
 		</div>
 		<nav class="sidebar-nav">
 			{#each navItems as { href, label, Icon }}

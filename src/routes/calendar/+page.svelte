@@ -236,16 +236,28 @@
 
 	.form-row-2 {
 		display: grid;
-		grid-template-columns: 1fr 1fr;
+		grid-template-columns: 1fr;
 		gap: 0.75rem;
 		margin-bottom: 0.75rem;
 	}
 
+	@media (min-width: 480px) {
+		.form-row-2 {
+			grid-template-columns: 1fr 1fr;
+		}
+	}
+
 	.form-row-3 {
 		display: grid;
-		grid-template-columns: 2fr 1fr 1fr;
+		grid-template-columns: 1fr;
 		gap: 0.75rem;
 		margin-bottom: 0.75rem;
+	}
+
+	@media (min-width: 480px) {
+		.form-row-3 {
+			grid-template-columns: 2fr 1fr 1fr;
+		}
 	}
 
 	.field {

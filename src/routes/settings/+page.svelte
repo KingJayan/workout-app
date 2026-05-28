@@ -270,9 +270,15 @@
 
 	.form-row-2 {
 		display: grid;
-		grid-template-columns: 1fr 1fr;
+		grid-template-columns: 1fr;
 		gap: 0.75rem;
 		margin-bottom: 0.75rem;
+	}
+
+	@media (min-width: 480px) {
+		.form-row-2 {
+			grid-template-columns: 1fr 1fr;
+		}
 	}
 
 	.field {
@@ -304,6 +310,10 @@
 	.select-base {
 		appearance: none;
 		cursor: pointer;
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23737373' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+		background-repeat: no-repeat;
+		background-position: right 0.5rem center;
+		padding-right: 1.75rem;
 	}
 
 	.form-actions {
