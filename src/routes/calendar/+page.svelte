@@ -150,7 +150,7 @@
 	<section class="section">
 		{#if data.events.length === 0}
 			<div class="card empty-card">
-				<p class="empty-text">No events yet. Add a sport or activity to factor into fatigue decisions.</p>
+				<p class="empty-text">No events yet — use "Add event" above to log a sport or activity.</p>
 			</div>
 		{:else}
 			<div class="card overflow-hidden">

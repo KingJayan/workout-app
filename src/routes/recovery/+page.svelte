@@ -35,7 +35,7 @@
 	<section class="section">
 		<div class="section-header">
 			<span class="section-title">Today's check-in</span>
-			{#if data.todayMetric}
+			{#if data.todayMetric || saving}
 				<span class="badge">logged</span>
 			{/if}
 		</div>

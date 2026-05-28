@@ -276,9 +276,6 @@
 		<header class="page-header">
 			<h1 class="page-title">Today</h1>
 			<div class="page-header-right">
-				{#if dataSource === 'local'}
-					<span class="offline-badge font-data">offline</span>
-				{/if}
 				<span class="page-date font-data">{data.today}</span>
 			</div>
 		</header>
@@ -382,7 +379,7 @@
 							</tr>
 						{:else if recentSets.length === 0}
 							<tr>
-								<td colspan="5" class="empty-state">No sets logged today.</td>
+								<td colspan="5" class="empty-state">No sets logged today — enter an exercise and set below to start.</td>
 							</tr>
 						{:else}
 							{#each recentSets as s}
@@ -506,16 +503,6 @@
 	.page-date {
 		font-size: 0.75rem;
 		color: var(--fg-muted);
-	}
-
-	.offline-badge {
-		font-size: 0.625rem;
-		letter-spacing: 0.06em;
-		text-transform: uppercase;
-		color: var(--fg-muted);
-		border: 1px solid var(--border);
-		padding: 0.0625rem 0.3125rem;
-		border-radius: 2px;
 	}
 
 	/* stat strip */

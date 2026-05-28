@@ -44,7 +44,7 @@
 	</div>
 
 	{#if data.days.length === 0}
-		<div class="card empty">No training data in the last 28 days.</div>
+		<div class="card empty">No training data in the last 28 days — log sets on the Today page to see progress here.</div>
 	{:else}
 		<section class="section">
 			<div class="section-header">
