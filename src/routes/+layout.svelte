@@ -106,9 +106,9 @@
 				class="bottom-nav-item"
 				class:active={isActive(href)}
 				aria-current={isActive(href) ? 'page' : undefined}
-				aria-label={label}
 			>
-				<Icon size={20} strokeWidth={1.5} />
+				<Icon size={18} strokeWidth={1.5} />
+				<span class="bottom-nav-label">{label}</span>
 			</a>
 		{/each}
 		{#if showInstall}
@@ -245,14 +245,23 @@
 	.bottom-nav-item {
 		flex: 1;
 		display: flex;
+		flex-direction: column;
 		align-items: center;
 		justify-content: center;
+		gap: 2px;
 		color: var(--fg-muted);
 		text-decoration: none;
 		background: none;
 		border: none;
 		cursor: pointer;
 		transition: color 80ms, background-color 80ms;
+	}
+
+	.bottom-nav-label {
+		font-size: 0.5625rem;
+		font-weight: 500;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
 	}
 
 	.bottom-nav-item:hover,

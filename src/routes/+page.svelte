@@ -521,8 +521,14 @@
 	/* stat strip */
 	.stat-strip {
 		display: grid;
-		grid-template-columns: repeat(4, 1fr);
+		grid-template-columns: repeat(2, 1fr);
 		margin-bottom: 1.25rem;
+	}
+
+	@media (min-width: 480px) {
+		.stat-strip {
+			grid-template-columns: repeat(4, 1fr);
+		}
 	}
 
 	.stat-cell {

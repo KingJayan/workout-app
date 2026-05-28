@@ -89,6 +89,17 @@ body {
 	border-color: var(--fg);
 }
 
+.input-base:focus-visible {
+	border-color: var(--fg);
+	outline: 2px solid var(--fg);
+	outline-offset: 1px;
+}
+
+.btn-base:focus-visible {
+	outline: 2px solid var(--fg);
+	outline-offset: 2px;
+}
+
 .input-base::placeholder {
 	color: var(--fg-muted);
 }
@@ -189,7 +200,7 @@ body {
 }
 
 .page-title {
-	font-size: 0.9375rem;
+	font-size: 1.0625rem;
 	font-weight: 600;
 	letter-spacing: -0.01em;
 	margin: 0;

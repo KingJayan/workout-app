@@ -154,6 +154,7 @@
 			</div>
 		{:else}
 			<div class="card overflow-hidden">
+				<div class="table-wrapper">
 				<table class="table-base">
 					<thead>
 						<tr>
@@ -204,6 +205,7 @@
 						{/each}
 					</tbody>
 				</table>
+				</div>
 			</div>
 		{/if}
 	</section>
@@ -341,5 +343,10 @@
 	.delete-btn:disabled {
 		opacity: 0.4;
 		cursor: not-allowed;
+	}
+
+	.table-wrapper {
+		overflow-x: auto;
+		-webkit-overflow-scrolling: touch;
 	}
 </style>
