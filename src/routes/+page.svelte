@@ -290,8 +290,8 @@
 					</div>
 				{/each}
 			{:else}
-				{#each statStrip as s, i}
-					<div class="stat-cell" class:stat-border={i > 0}>
+				{#each statStrip as s}
+					<div class="stat-cell">
 						<p class="stat-label">{s.label}</p>
 						<p class="stat-value font-data">{s.value}</p>
 						<p class="stat-unit font-data">{s.unit}</p>
@@ -537,8 +537,21 @@
 		padding: 0.625rem 0.875rem;
 	}
 
-	.stat-border {
+	.stat-cell:nth-child(2n) {
 		border-left: 1px solid var(--border);
+	}
+
+	.stat-cell:nth-child(n+3) {
+		border-top: 1px solid var(--border);
+	}
+
+	@media (min-width: 480px) {
+		.stat-cell:nth-child(n+2) {
+			border-left: 1px solid var(--border);
+		}
+		.stat-cell:nth-child(n+3) {
+			border-top: none;
+		}
 	}
 
 	.stat-label {

@@ -4,11 +4,13 @@ import { eq, and, gte } from 'drizzle-orm';
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals, url }) => {
 	if (!locals.user) redirect(302, '/login');
 
 	const userId = locals.user.id;
-	const since = new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+	const daysParam = parseInt(url.searchParams.get('days') ?? '28');
+	const days = [7, 28, 90].includes(daysParam) ? daysParam : 28;
+	const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
 	const rows = await db
 		.select({
@@ -31,12 +33,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 		byDate[date].sessions.add(r.workoutId);
 	}
 
-	const days = Object.entries(byDate)
+	const dayRows = Object.entries(byDate)
 		.map(([date, v]) => ({ date, volumeLoad: Math.round(v.volumeLoad), sets: v.sets, sessions: v.sessions.size }))
 		.sort((a, b) => a.date.localeCompare(b.date));
 
-	const totalVolume = days.reduce((acc, d) => acc + d.volumeLoad, 0);
-	const totalSets = days.reduce((acc, d) => acc + d.sets, 0);
+	const totalVolume = dayRows.reduce((acc, d) => acc + d.volumeLoad, 0);
+	const totalSets = dayRows.reduce((acc, d) => acc + d.sets, 0);
 
-	return { days, totalVolume, totalSets, sessionCount: days.length };
+	return { days: dayRows, totalVolume, totalSets, sessionCount: dayRows.length, range: days };
 };

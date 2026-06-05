@@ -69,5 +69,16 @@ export const actions: Actions = {
 			});
 
 		return { success: true };
+	},
+
+	deleteEntry: async ({ request, locals }) => {
+		if (!locals.user) redirect(302, '/login');
+		const data = await request.formData();
+		const date = data.get('date') as string;
+		if (!date) return fail(400, { error: 'Missing date.' });
+		await db
+			.delete(recoveryMetrics)
+			.where(and(eq(recoveryMetrics.userId, locals.user.id), eq(recoveryMetrics.date, date)));
+		return { success: true };
 	}
 };

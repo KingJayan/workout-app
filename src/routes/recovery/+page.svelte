@@ -1,14 +1,24 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import type { PageData, ActionData } from './$types';
+	import { Trash2 } from 'lucide-svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
 	let saving = $state(false);
+	let deleting = $state<string | null>(null);
+	let selectedDate = $state(data.today);
 
 	let sleepVal = $state(data.todayMetric?.sleepHours?.toString() ?? '');
 	let readinessVal = $state(data.todayMetric?.subjectiveReadiness?.toString() ?? '');
 	let notesVal = $state(data.todayMetric?.notes ?? '');
+
+	function selectRow(row: typeof data.recent[number]) {
+		selectedDate = row.date;
+		sleepVal = row.sleepHours?.toString() ?? '';
+		readinessVal = row.subjectiveReadiness?.toString() ?? '';
+		notesVal = row.notes ?? '';
+	}
 
 	function readinessLabel(r: number): string {
 		if (r <= 2) return 'very low';
@@ -34,8 +44,10 @@
 	<!-- log form -->
 	<section class="section">
 		<div class="section-header">
-			<span class="section-title">Today's check-in</span>
-			{#if data.todayMetric || saving}
+			<span class="section-title">{selectedDate === data.today ? "Today's check-in" : selectedDate}</span>
+			{#if selectedDate !== data.today}
+				<button class="btn-base btn-ghost edit-reset-btn" onclick={() => { selectedDate = data.today; sleepVal = data.todayMetric?.sleepHours?.toString() ?? ''; readinessVal = data.todayMetric?.subjectiveReadiness?.toString() ?? ''; notesVal = data.todayMetric?.notes ?? ''; }}>← today</button>
+			{:else if data.todayMetric || saving}
 				<span class="badge">logged</span>
 			{/if}
 		</div>
@@ -52,7 +64,7 @@
 				saving = true;
 				return async ({ update }) => { saving = false; await update(); };
 			}}>
-				<input type="hidden" name="date" value={data.today} />
+				<input type="hidden" name="date" value={selectedDate} />
 
 				<div class="form-row">
 					<div class="field">
@@ -128,17 +140,29 @@
 							<th>Sleep</th>
 							<th>Readiness</th>
 							<th>Notes</th>
+							<th></th>
 						</tr>
 					</thead>
 					<tbody>
 						{#each data.recent as row}
-							<tr>
+							<tr class="history-row" class:history-row-active={selectedDate === row.date} onclick={() => selectRow(row)}>
 								<td class="font-data">{row.date}</td>
 								<td class="font-data">{row.sleepHours !== null ? row.sleepHours + 'h' : '—'}</td>
 								<td class="font-data">
 									{row.subjectiveReadiness !== null ? row.subjectiveReadiness + '/10' : '—'}
 								</td>
 								<td class="notes-cell">{row.notes ?? ''}</td>
+								<td class="action-cell">
+									<form method="POST" action="?/deleteEntry" use:enhance={() => {
+										deleting = row.date;
+										return async ({ update }) => { deleting = null; if (selectedDate === row.date) { selectedDate = data.today; sleepVal = ''; readinessVal = ''; notesVal = ''; } await update(); };
+									}}>
+										<input type="hidden" name="date" value={row.date} />
+										<button type="submit" class="delete-btn" aria-label="Delete entry" disabled={deleting === row.date} onclick={(e) => e.stopPropagation()}>
+											<Trash2 size={12} strokeWidth={1.5} />
+										</button>
+									</form>
+								</td>
 							</tr>
 						{/each}
 					</tbody>
@@ -223,5 +247,51 @@
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
+	}
+
+	.history-row {
+		cursor: pointer;
+	}
+
+	.history-row:hover td {
+		background-color: var(--muted);
+	}
+
+	.history-row-active td {
+		background-color: var(--muted);
+	}
+
+	.action-cell {
+		width: 32px;
+		padding: 0.25rem;
+	}
+
+	.delete-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 24px;
+		height: 24px;
+		border: none;
+		background: none;
+		color: var(--fg-muted);
+		cursor: pointer;
+		border-radius: 2px;
+		transition: color 80ms, background-color 80ms;
+	}
+
+	.delete-btn:hover {
+		color: var(--fg);
+		background-color: var(--border);
+	}
+
+	.delete-btn:disabled {
+		opacity: 0.4;
+		cursor: not-allowed;
+	}
+
+	.edit-reset-btn {
+		font-size: 0.6875rem;
+		padding: 0.125rem 0.375rem;
 	}
 </style>

@@ -22,7 +22,11 @@
 <div class="page">
 	<header class="page-header">
 		<h1 class="page-title">Progress</h1>
-		<span class="page-sub font-data">28 days</span>
+		<div class="range-toggle">
+			{#each [7, 28, 90] as d}
+				<a href="?days={d}" class="range-btn" class:range-active={data.range === d}>{d}d</a>
+			{/each}
+		</div>
 	</header>
 
 	<div class="stat-strip card">
@@ -103,9 +107,31 @@
 		}
 	}
 
-	.page-sub {
-		font-size: 0.75rem;
+	.range-toggle {
+		display: flex;
+		gap: 2px;
+	}
+
+	.range-btn {
+		font-family: var(--font-mono);
+		font-size: 0.6875rem;
+		padding: 0.25rem 0.5rem;
+		border-radius: 2px;
+		border: 1px solid var(--border);
 		color: var(--fg-muted);
+		text-decoration: none;
+		transition: color 80ms, background-color 80ms;
+	}
+
+	.range-btn:hover {
+		color: var(--fg);
+		background-color: var(--muted);
+	}
+
+	.range-active {
+		background-color: var(--muted);
+		color: var(--fg);
+		border-color: var(--fg);
 	}
 
 	.stat-strip {

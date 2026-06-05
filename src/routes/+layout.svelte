@@ -73,7 +73,7 @@
 <div class="layout">
 	<aside class="sidebar">
 		<div class="sidebar-top">
-			<span class="sidebar-logo">WK</span>
+			<span class="sidebar-logo">workout</span>
 		</div>
 		<nav class="sidebar-nav">
 			{#each navItems as { href, label, Icon }}
@@ -88,11 +88,14 @@
 				</a>
 			{/each}
 		</nav>
-		{#if showInstall}
-			<div class="sidebar-bottom">
+		<div class="sidebar-bottom">
+			{#if showInstall}
 				<button class="btn-base btn-ghost install-btn" onclick={install}>Install App</button>
-			</div>
-		{/if}
+			{/if}
+			<form method="POST" action="/logout">
+				<button type="submit" class="btn-base btn-ghost install-btn">Sign out</button>
+			</form>
+		</div>
 	</aside>
 
 	<main class="content">
