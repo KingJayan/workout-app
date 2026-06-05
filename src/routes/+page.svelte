@@ -247,7 +247,7 @@
 				const parts = [];
 				if (result.setsDropped > 0) parts.push(`${result.setsDropped} sets dropped`);
 				if (result.exercisesSwapped > 0) parts.push(`${result.exercisesSwapped} swapped`);
-				toast(parts.length ? parts.join(', ') : 'adjusted', 'info');
+				toast(parts.length ? parts.join(', ') : 'adjusted', 'success');
 				if (result.noAlternativeFound) toast('some exercises kept — no gear alternative', 'error');
 				// refresh prescriptions from server
 				const dash = await fetch('/api/dashboard');
@@ -325,6 +325,7 @@
 											class="btn-base btn-ghost rx-rewrite-btn"
 											onclick={() => triggerRewrite(rx.id)}
 											disabled={rewriting === rx.id}
+											title="Adjusts this workout based on your recovery data — may reduce sets or swap exercises"
 										>
 											{rewriting === rx.id ? '…' : 'adapt'}
 										</button>
@@ -343,7 +344,7 @@
 												@ {ex.loadKg}kg
 											{/if}
 											{#if ex.rpe}
-												RPE {ex.rpe}
+												<abbr title="Rate of Perceived Exertion — effort scale from 1 (minimal) to 10 (maximal)" class="rpe-abbr">RPE</abbr> {ex.rpe}
 											{/if}
 										</span>
 									</div>
@@ -351,6 +352,20 @@
 							</div>
 						</div>
 					{/each}
+				</div>
+			</section>
+		{/if}
+
+		{#if prescriptionList.length === 0 && dataSource !== 'loading'}
+			<section class="section">
+				<div class="card onboarding-card">
+					<p class="onboarding-title">Getting started</p>
+					<ol class="onboarding-steps">
+						<li>Log sleep and readiness each morning on the <a class="onboarding-link" href="/recovery">Recovery</a> page</li>
+						<li>Track sports and races on the <a class="onboarding-link" href="/calendar">Calendar</a> page</li>
+						<li>Once a prescription is generated, use "adapt" to tailor it to your recovery</li>
+						<li>Use the log panel to record each set as you train</li>
+					</ol>
 				</div>
 			</section>
 		{/if}
@@ -368,7 +383,7 @@
 							<th>Exercise</th>
 							<th>Reps</th>
 							<th>Load</th>
-							<th>RPE</th>
+							<th><abbr title="Rate of Perceived Exertion — effort scale from 1 (minimal) to 10 (maximal)" class="rpe-abbr">RPE</abbr></th>
 							<th>Time</th>
 						</tr>
 					</thead>
@@ -767,5 +782,43 @@
 
 	.parser-template {
 		opacity: 0.7;
+	}
+
+	.onboarding-card {
+		padding: 1rem;
+	}
+
+	.onboarding-title {
+		font-size: 0.75rem;
+		font-weight: 500;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		color: var(--fg-muted);
+		margin: 0 0 0.625rem;
+	}
+
+	.onboarding-steps {
+		margin: 0;
+		padding-left: 1.25rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.375rem;
+	}
+
+	.onboarding-steps li {
+		font-size: 0.8125rem;
+		color: var(--fg-muted);
+	}
+
+	.onboarding-link {
+		color: var(--fg);
+		text-decoration: underline;
+		text-underline-offset: 2px;
+	}
+
+	.rpe-abbr {
+		text-decoration: underline dotted;
+		text-decoration-color: var(--border);
+		cursor: help;
 	}
 </style>

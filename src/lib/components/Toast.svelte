@@ -4,7 +4,7 @@
 
 <div class="toast-stack" aria-live="polite" aria-atomic="false">
 	{#each $toasts as t (t.id)}
-		<div class="toast" class:toast-error={t.type === 'error'} role="status">
+		<div class="toast" class:toast-error={t.type === 'error'} class:toast-success={t.type === 'success'} role="status">
 			{t.message}
 		</div>
 	{/each}
@@ -38,6 +38,10 @@
 		border-color: var(--fg);
 		background-color: var(--fg);
 		color: var(--accent-fg);
+	}
+
+	.toast-success {
+		border-color: var(--fg);
 	}
 
 	@keyframes slide-in {

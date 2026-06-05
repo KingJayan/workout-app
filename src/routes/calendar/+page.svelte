@@ -150,7 +150,7 @@
 	<section class="section">
 		{#if data.events.length === 0}
 			<div class="card empty-card">
-				<p class="empty-text">No events yet — use "Add event" above to log a sport or activity.</p>
+				<p class="empty-text">No events yet — log sports, races, and activities here. They're factored into your daily prescription when you use "adapt", so heavier activity days can reduce your training load automatically.</p>
 			</div>
 		{:else}
 			<div class="card overflow-hidden">
